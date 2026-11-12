@@ -373,7 +373,7 @@ function archiveScreen(){
  const groups={};list.forEach(o=>{(groups[dayKey(o.closedAt)]=groups[dayKey(o.closedAt)]||[]).push(o)});
  const today=dayKey(Date.now()),yest=dayKey(Date.now()-864e5);
  const html=Object.keys(groups).map(k=>{const g=groups[k];const sum=g.filter(o=>!o.chef).reduce((a,o)=>a+o.paid,0);const nm=k===today?'Сегодня':k===yest?'Вчера':dd(g[0].closedAt,{weekday:'short'});
- return `<div class="panel"><div class="hdr sub"><span>${nm}, ${dd(g[0].closedAt,{day:'numeric',month:'long'}).toLowerCase()}</span><b style="font-size:14px;color:var(--txt)">${fmt(sum)} сом</b></div>${g.map(o=>`<button class="item" data-act="arcOrder" data-v="${o.id}"><span class="nm"><b>Стол ${esc(o.table)} <span class="sec small" style="font-weight:400">· ${tm(o.closedAt)}</span>${o.chef?'<span class="tag chef">Шеф</span>':o.discount>0?`<span class="tag disc">−${o.discPct?o.discPct+'%':fmt(o.discount)}</span>`:''}</b><span>${o.lines.length} ${o.lines.length===1?'позиция':'поз.'}</span></span><span class="pr" style="${o.chef?'color:var(--sec);text-decoration:line-through':''}">${fmt(o.chef?o.total:o.paid)}</span></button>`).join('')}</div>`}).join('');
+ return `<div class="panel"><div class="hdr sub"><span>${nm}, ${dd(g[0].closedAt,{day:'numeric',month:'long'}).toLowerCase()}</span><b style="font-size:14px;color:var(--txt)">${fmt(sum)} сом</b></div>${g.map(o=>`<button class="item" data-act="arcOrder" data-v="${o.id}"><span class="nm"><b>${o.manual?'Прошлая смена':'Стол '+esc(o.table)} ${o.manual?'':`<span class="sec small" style="font-weight:400">· ${tm(o.closedAt)}</span>`}${o.chef?'<span class="tag chef">Шеф</span>':o.discount>0?`<span class="tag disc">−${o.discPct?o.discPct+'%':fmt(o.discount)}</span>`:''}</b><span>${o.manual?'Добавлено вручную':o.lines.length+' '+(o.lines.length===1?'позиция':'поз.')}</span></span><span class="pr" style="${o.chef?'color:var(--sec);text-decoration:line-through':''}">${fmt(o.chef?o.total:o.paid)}</span></button>`).join('')}</div>`}).join('');
  return `<div class="scroll"><div class="hd"><div class="l"><span class="small sec" style="font-weight:500">Закрытые заказы</span><h1>Архив</h1></div></div>${html||'<div class="empty">Пока нет закрытых заказов</div>'}</div>`}
 
 function tabScreen(){return ui.tab==='tables'?tablesScreen():ui.tab==='menu'?menuScreen():ui.tab==='cash'?cashScreen():archiveScreen()}
@@ -426,10 +426,22 @@ function zonesSheet(){
 function settingsSheet(){
  openSheet(`<b style="font-size:22px;letter-spacing:-.02em">Настройки</b>
  <button class="act" data-act="editQuick2"><div><b>Быстрые комментарии</b><span>${S.quick.length} шт. · добавить, удалить</span></div></button>
+ <button class="act" data-act="manual"><div><b>Прошлые смены</b><span>Добавить кассу, которая уже была в этом месяце</span></div></button>
  <button class="act" data-act="zones"><div><b>Столы и зоны</b><span>Добавить или убрать стол</span></div></button>
  <button class="act" data-act="backup"><div><b>Резервная копия</b><span>Сохранить или восстановить все данные</span></div></button>
  <div class="card" style="background:var(--seg);box-shadow:none;padding:14px 16px;gap:6px"><div class="row"><span class="k">Заведению</span><b>${S.set.venue}%</b></div><div class="row"><span class="k">Тебе с остатка</span><b>${S.set.mine}%</b></div></div>
+ <button class="act red" data-act="wipe" style="height:52px"><div><b>Стереть смены и заказы</b><span>Меню, зоны и комментарии останутся</span></div></button>
  <button class="btn ghost" data-act="closeSheet">Закрыть</button>`)}
+function manualSheet(){
+ const list=S.archive.filter(o=>o.manual).sort((a,b)=>b.closedAt-a.closedAt);
+ const y=new Date(Date.now()-864e5).toLocaleDateString('sv-SE');
+ openSheet(`<b style="font-size:22px;letter-spacing:-.02em">Прошлые смены</b><span class="sec small" style="line-height:1.4">Добавь смены, которые были до начала работы с приложением. Они попадут в кассу, зарплату и график.</span>
+ ${list.length?`<div class="panel" style="box-shadow:none;background:var(--seg)">${list.map(o=>`<div class="row" style="padding:9px 0;align-items:center"><span><b>${dd(o.closedAt,{day:'numeric',month:'long'}).toLowerCase()}</b><br><span class="sec small">касса ${fmt(o.paid)} · ${dur(o.hours*3600000)} · зарплата ${fmt(salary(o.paid))}</span></span><button class="x" data-act="mdel" data-v="${o.id}" aria-label="Удалить">✕</button></div>`).join('')}</div>`:''}
+ <div class="fld"><label>Дата смены</label><input id="md" type="date" value="${y}" max="${new Date().toLocaleDateString('sv-SE')}"></div>
+ <div class="fld"><label>Касса за смену, сом</label><input id="mc" type="number" inputmode="numeric" placeholder="Например, 48600"></div>
+ <div class="fld"><label>Часов на смене</label><input id="mh" type="number" inputmode="decimal" value="8"></div>
+ <div class="row" id="mp" style="padding:0 4px"><span class="k">Зарплата за смену</span><b class="acc">0 сом</b></div>
+ <button class="btn" data-act="madd">Добавить смену</button><button class="btn ghost" data-act="settings">Назад</button>`)}
 function backupSheet(){
  openSheet(`<b style="font-size:22px;letter-spacing:-.02em">Резервная копия</b><span class="sec small" style="line-height:1.4">Скопируй текст ниже и сохрани в заметках. Чтобы восстановить, вставь его в поле и нажми «Восстановить».</span>
  <div class="fld"><textarea id="bk" rows="6">${esc(JSON.stringify(S))}</textarea></div><button class="btn" data-act="bkcopy">Скопировать</button><button class="btn ghost" data-act="bkrestore">Восстановить из текста</button><button class="link" data-act="settings">Назад</button>`)}
@@ -503,13 +515,19 @@ function act(a,el){
  case 'delCat':armed(el,()=>{S.menu.cats=S.menu.cats.filter(c=>c.id!==v);ui.cat=null;save();closeSheet();render()});break;
  case 'cview':ui.cashView=v;render();break;
  case 'period':ui.period=v;render();break;
- case 'arcOrder':arcSheet(v);break;
+ case 'arcOrder':{const o=S.archive.find(x=>x.id===v);if(o&&o.manual)manualSheet();else arcSheet(v);break}
  case 'settings':settingsSheet();break;
  case 'zones':zonesSheet();break;
  case 'tadd':{const i=document.querySelector('.zin[data-z="'+v+'"]');const t=i.value.trim();const z=S.zones.find(z=>z.id===v);if(t&&!S.zones.some(z=>z.tables.includes(t))){z.tables.push(t);save();zonesSheet()}else if(t)toast('Такой стол уже есть');break}
  case 'tdel':{const z=S.zones.find(z=>z.id===el.dataset.z);const t=z.tables[+v];if(S.orders[t]&&S.orders[t].lines.length){toast('На столе есть открытый заказ');break}z.tables.splice(+v,1);save();zonesSheet();break}
  case 'zadd':{const t=$('#zn').value.trim();if(t){S.zones.push({id:'z'+uid(),name:t,tables:[]});save();zonesSheet()}break}
  case 'backup':backupSheet();break;
+ case 'manual':manualSheet();break;
+ case 'wipe':armed(el,()=>{S.shift=null;S.shifts=[];S.orders={};S.archive=[];save();closeSheet();ui.screen='main';ui.tab='tables';render();toast('Смены и заказы стёрты')});break;
+ case 'madd':{const d=$('#md').value,c=parseInt($('#mc').value),h=parseFloat($('#mh').value);if(!d||isNaN(c)||c<0){toast('Введи дату и кассу');break}const hh=isNaN(h)||h<0?0:h;const st=new Date(d+'T12:00:00').getTime();const id=uid();
+  S.shifts.push({start:st,end:st+hh*3600000,manual:true,id});S.shifts.sort((a,b)=>a.start-b.start);
+  S.archive.push({id,manual:true,table:'—',lines:[],total:c,discount:0,discPct:0,paid:c,chef:false,closedAt:st+3600000,shiftStart:st,hours:hh});save();manualSheet();toast('Смена добавлена · зарплата '+fmt(salary(c))+' сом');break}
+ case 'mdel':{S.archive=S.archive.filter(o=>o.id!==v);S.shifts=S.shifts.filter(s=>s.id!==v);save();manualSheet();break}
  case 'bkcopy':{const t=$('#bk');t.select();try{navigator.clipboard.writeText(t.value).then(()=>toast('Скопировано'),()=>{document.execCommand('copy');toast('Скопировано')})}catch(e){document.execCommand('copy');toast('Скопировано')}break}
  case 'bkrestore':{try{const c=JSON.parse($('#bk').value);if(!c.menu||!c.zones)throw 0;S=Object.assign(defState(),c);save();closeSheet();render();toast('Данные восстановлены')}catch(e){toast('Не удалось прочитать копию')}break}
  case 'closeSheet':closeSheet();break;
@@ -520,6 +538,7 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if
 document.addEventListener('input',e=>{const t=e.target;
  if(t.id==='q'){ui.q=t.value;refreshOrder()}
  else if(t.id==='mq'){ui.menuQ=t.value;refreshMenu()}
+ else if(t.id==='mc'){const n=parseInt(t.value);const p=$('#mp b');if(p)p.textContent=fmt(isNaN(n)?0:salary(n))+' сом'}
  else if(t.id==='lc'){const l=S.orders[ui.table].lines.find(x=>x.id===sheetLine);l.comment=t.value.trim();save();refreshOrder()}
  else if(t.id==='cdisc'){const n=parseInt(t.value);ui.disc={pct:0,custom:isNaN(n)?0:Math.max(0,n)};const o=S.orders[ui.table];const total=orderSum(o);const pay=total-discSum(total);const b=document.querySelector('.btn[data-act="pay"]');if(b)b.textContent='Закрыть стол · '+fmt(pay)+' сом';const k=document.querySelectorAll('.card')[0];if(k){render();const i=$('#cdisc');i.focus();i.setSelectionRange(i.value.length,i.value.length)}}
 });
