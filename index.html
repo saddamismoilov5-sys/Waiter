@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Заказы официанта</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+:root{--bg:#F5F5F7;--card:#fff;--txt:#1D1D1F;--sec:#6E6E73;--line:rgba(0,0,0,.08);--acc:#0071E3;--grn:#15803D;--amb:#B45309;--seg:rgba(118,118,128,.12);--segon:#fff;--segsh:0 1px 3px rgba(0,0,0,.12);--sh:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.04);--nav:rgba(250,250,252,.92);--pill:#ECECF0;--bar:#D2D2D7;--red:#D70015;--redbg:#FDE8EA;--purp:#6B3FA0;--purpbg:#EEE5FA;--grnbg:#E3F5E8;--ambbg:#FFF4E0;--outl:rgba(0,0,0,.12);--free:#86868B;--dg:#34C759;--da:#F59E0B;--ctl:#fff}
+[data-theme=dark]{--bg:#000;--card:#1C1C1E;--txt:#F5F5F7;--sec:#8E8E93;--line:rgba(255,255,255,.1);--acc:#0A84FF;--grn:#30D158;--amb:#FF9F0A;--seg:rgba(118,118,128,.24);--segon:#48484A;--segsh:0 1px 3px rgba(0,0,0,.4);--sh:none;--nav:rgba(22,22,24,.94);--pill:#111113;--bar:#3A3A3C;--red:#FF453A;--redbg:rgba(255,69,58,.14);--purp:#C9A8FF;--purpbg:rgba(175,130,255,.18);--grnbg:rgba(48,209,88,.16);--ambbg:rgba(255,159,10,.14);--outl:rgba(255,255,255,.16);--free:#6E6E73;--dg:#30D158;--da:#FF9F0A;--ctl:#2C2C2E}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:'Inter',-apple-system,system-ui,sans-serif;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+input,textarea,select{font:inherit;color:inherit}
+#app{max-width:480px;margin:0 auto;height:100dvh;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.scroll{flex:1;min-height:0;overflow-y:auto;padding:max(20px,env(safe-area-inset-top)) 20px 24px;display:flex;flex-direction:column;gap:16px;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar,.chips::-webkit-scrollbar{display:none}
+h1{margin:0;font-size:34px;line-height:1.1;font-weight:700;letter-spacing:-.02em}
+.sec{color:var(--sec)}
+.small{font-size:13px}
+.hd{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+.hd .l{display:flex;flex-direction:column;gap:2px;min-width:0}
+.live{display:flex;align-items:center;gap:6px;padding:0;background:none;border:0;font-size:13px;font-weight:500;color:var(--grn)}
+.live i{width:8px;height:8px;border-radius:4px;background:var(--dg)}
+.round{width:44px;height:44px;border-radius:22px;border:0;background:var(--card);color:var(--txt);box-shadow:0 1px 2px rgba(0,0,0,.06);display:flex;align-items:center;justify-content:center;flex:none}
+.card{background:var(--card);border-radius:22px;padding:18px 20px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:12px}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:15px}
+.row .k{color:var(--sec)}
+.big{font-size:28px;font-weight:600;letter-spacing:-.02em;line-height:1.2}
+.big b{font-weight:inherit}
+.big small,.hero small{font-size:15px;font-weight:500;color:var(--sec);letter-spacing:0}
+.hero{font-size:40px;font-weight:700;letter-spacing:-.03em;line-height:1.15}
+.hero small{font-size:17px}
+.acc{color:var(--acc)}
+.sepl{border-top:1px solid var(--line);padding-top:12px}
+.seg{display:flex;padding:2px;border-radius:10px;background:var(--seg);flex:none}
+.seg button{flex:1;height:32px;border:0;border-radius:8px;background:transparent;font-size:13px;font-weight:500}
+.seg button.on{background:var(--segon);box-shadow:var(--segsh);font-weight:600}
+.chips{display:flex;gap:8px;overflow-x:auto;margin:0 -20px;padding:0 20px;flex:none}
+.chip{flex:none;height:36px;padding:0 14px;border:0;border-radius:18px;background:var(--seg);font-size:14px;font-weight:500;white-space:nowrap}
+.chip.on{background:var(--acc);color:#fff;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tile{border:0;text-align:left;border-radius:20px;padding:13px 14px;height:96px;display:flex;flex-direction:column;justify-content:space-between;background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.tile.free{background:transparent;border:1px solid var(--outl);box-shadow:none}
+.tile.closed{background:var(--pill);box-shadow:none}
+.tile .n{font-size:28px;font-weight:600;letter-spacing:-.02em;line-height:1}
+.tile .n.s{font-size:20px;line-height:28px}
+.tile.free .n{color:var(--free)}
+.tile.closed .n,.tile.closed .p{color:var(--sec)}
+.tile .top{display:flex;align-items:center;justify-content:space-between}
+.tile .top i{width:8px;height:8px;border-radius:4px}
+.tile .st{font-size:12px;font-weight:500}
+.tile .p{font-size:15px;font-weight:600}
+.tile .bt{display:flex;flex-direction:column;gap:2px}
+.nav{height:84px;padding:8px 12px 22px;display:flex;justify-content:space-around;background:var(--nav);border-top:1px solid var(--line);flex:none;backdrop-filter:blur(20px)}
+.nav button{width:72px;padding:4px 0 0;background:none;border:0;font-size:11px;font-weight:500;color:var(--sec);display:flex;flex-direction:column;align-items:center;gap:4px}
+.nav button.on{color:var(--acc);font-weight:600}
+.btn{height:54px;border:0;border-radius:16px;background:var(--acc);color:#fff;font-size:17px;font-weight:600;width:100%}
+.btn:disabled{opacity:.4}
+.btn.pu{background:#8B5CF6}
+.btn.ghost{background:var(--seg);color:var(--txt);font-size:16px;height:48px}
+.btn.red{background:var(--redbg);color:var(--red);font-size:16px;height:48px}
+.link{height:44px;border:0;background:transparent;color:var(--acc);font-size:15px;font-weight:500}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px}
+.topbar .back{height:36px;padding:0;background:none;border:0;font-size:16px;color:var(--acc)}
+.topbar .t{font-size:17px;font-weight:600}
+.pill{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:11px;font-size:12px;font-weight:600}
+.pill.wait{background:var(--ambbg);color:var(--amb)}.pill.ok{background:var(--grnbg);color:var(--grn)}.pill.new{background:var(--seg);color:var(--sec)}
+.tag{margin-left:6px;height:18px;padding:0 7px;border-radius:9px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;vertical-align:1px}
+.tag.chef{background:var(--purpbg);color:var(--purp)}.tag.disc{background:var(--grnbg);color:var(--grn)}
+.search{display:flex;align-items:center;gap:8px;height:44px;padding:0 14px;border-radius:14px;background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.05);border:1.5px solid transparent;color:var(--sec)}
+.search:focus-within{border-color:var(--acc)}
+.search input{flex:1;min-width:0;border:0;background:transparent;outline:0;font-size:16px;color:var(--txt)}
+.search button{border:0;background:none;color:var(--acc);font-size:14px;padding:0}
+.search .kb{flex:none;height:28px;min-width:44px;padding:0 10px;border-radius:14px;background:var(--seg);color:var(--txt);font-size:13px;font-weight:600}
+.search .kb.on{background:var(--acc);color:#fff}
+.panel{background:var(--card);border-radius:22px;box-shadow:var(--sh);padding:6px 18px}
+.panel .hdr{font-size:12px;font-weight:600;color:var(--sec);padding:12px 0 6px}
+.item{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line);width:100%;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left}
+.panel .hdr+.item,.panel>.item:first-child{border-top:0}
+.item .nm{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.item .nm b{font-size:16px;font-weight:500}
+.item .nm span{font-size:12px;color:var(--sec);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .pr{font-size:16px;font-weight:600;flex:none}
+.item.stop .nm b,.item.stop .pr{color:var(--sec)}
+mark{background:var(--ambbg);color:inherit;border-radius:3px}
+.badge{min-width:22px;height:22px;border-radius:11px;background:var(--acc);color:#fff;font-size:12px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;padding:0 6px}
+.line{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.line:first-child{border-top:0}
+.line .ck{width:26px;height:26px;border-radius:13px;border:1.8px solid var(--bar);background:none;flex:none;display:flex;align-items:center;justify-content:center;padding:0;color:#fff}
+.line.done .ck{background:var(--bar);border-color:var(--bar)}
+.line .body{flex:1;min-width:0;background:none;border:0;text-align:left;padding:0;display:flex;flex-direction:column;gap:2px}
+.line .body b{font-size:16px;font-weight:500}
+.line .body span{font-size:13px;color:var(--sec)}
+.line .sm{font-size:16px;font-weight:600}
+.line.done .body b,.line.done .sm{color:var(--sec)}
+.bottom{flex:none;padding:12px 20px max(20px,env(safe-area-inset-bottom));background:var(--nav);border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px;backdrop-filter:blur(20px)}
+.bottom .t{display:flex;flex-direction:column;gap:2px}
+.bottom .t b{font-size:22px;font-weight:700;letter-spacing:-.02em}
+.bottom .btn{width:auto;padding:0 22px;height:48px;font-size:16px}
+.sw{width:51px;height:31px;border-radius:16px;background:var(--bar);position:relative;border:0;padding:0;flex:none;transition:background .15s}
+.sw i{position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:14px;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.25);transition:left .15s}
+.sw.on{background:#34C759}.sw.on i{left:22px}
+.banner{border-radius:16px;padding:12px 16px;font-size:13px;line-height:1.4;font-weight:500}
+.banner.amb{background:var(--ambbg);color:var(--amb)}.banner.pu{background:var(--purpbg);color:var(--purp)}
+#sheet{position:fixed;inset:0;display:none;z-index:20}
+#sheet.open{display:block}
+#sheet .bg{position:absolute;inset:0;background:rgba(0,0,0,.4)}
+#sheet .box{position:absolute;left:50%;transform:translateX(-50%);width:100%;max-width:480px;bottom:0;max-height:88dvh;overflow-y:auto;background:var(--card);border-radius:28px 28px 0 0;padding:10px 20px max(28px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;box-shadow:0 -8px 40px rgba(0,0,0,.25)}
+.grab{align-self:center;width:36px;height:5px;border-radius:3px;background:var(--bar);flex:none}
+.act{display:flex;align-items:center;gap:14px;padding:0 16px;height:60px;border:0;border-radius:16px;background:var(--seg);text-align:left;width:100%}
+.act b{font-size:16px;font-weight:600;display:block}.act span{font-size:12px;color:var(--sec);display:block}
+.act.red{background:var(--redbg);color:var(--red)}
+.qty{display:flex;align-items:center;gap:4px;padding:4px;border-radius:22px;background:var(--seg)}
+.qty button{width:36px;height:36px;border:0;border-radius:18px;background:var(--ctl);font-size:20px}
+.qty span{width:32px;text-align:center;font-size:17px;font-weight:600}
+.fld{display:flex;flex-direction:column;gap:6px}
+.fld label{font-size:13px;font-weight:600;color:var(--sec);padding-left:4px}
+.fld input,.fld textarea,.fld select{border:0;border-radius:14px;background:var(--seg);padding:12px 14px;font-size:16px;outline:0;width:100%;resize:none}
+.fld input:focus,.fld textarea:focus{box-shadow:0 0 0 1.5px var(--acc)}
+.x{border:0;background:none;color:var(--sec);padding:0 0 0 6px;font-size:16px}
+.cm{display:inline-flex;align-items:center;height:36px;padding:0 6px 0 14px;border-radius:18px;background:var(--seg);font-size:14px;font-weight:500}
+.wrap{display:flex;flex-wrap:wrap;gap:8px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:110px;z-index:30;max-width:440px;width:calc(100% - 40px);background:rgba(40,40,44,.96);color:#fff;border-radius:16px;padding:12px 16px;font-size:14px;display:none;align-items:center;justify-content:space-between;gap:12px}
+#toast.on{display:flex}
+#toast button{border:0;background:none;color:#64B5FF;font-weight:600;font-size:14px;padding:0}
+.bars{display:flex;align-items:flex-end;gap:4px;overflow-x:auto}
+.bars>div{flex:1;min-width:16px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;height:130px}
+.bars i{width:100%;max-width:18px;border-radius:6px;background:var(--bar)}
+.bars span{font-size:10px;color:var(--sec)}
+.bars .cur i{background:var(--acc)}.bars .cur span{color:var(--acc);font-weight:600}
+.three{display:flex;gap:10px}
+.three>div{flex:1;background:var(--card);border-radius:18px;padding:12px 14px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:2px}
+.three small{font-size:12px;color:var(--sec)}.three b{font-size:20px;font-weight:700;letter-spacing:-.02em}
+.dates{display:flex;gap:10px;align-items:center}
+.dates label{flex:1;background:var(--card);border-radius:14px;padding:8px 12px;box-shadow:0 1px 2px rgba(0,0,0,.05);display:flex;flex-direction:column;gap:1px;font-size:11px;color:var(--sec)}
+.dates input{border:0;background:transparent;font-size:15px;font-weight:500;outline:0;padding:0;color:var(--txt);width:100%}
+.empty{text-align:center;color:var(--sec);font-size:14px;padding:26px 10px}
+.ico{width:64px;height:64px;border-radius:32px;background:var(--seg);display:flex;align-items:center;justify-content:center;color:var(--sec)}
+.dim{opacity:.45}
+.dis{opacity:.4;pointer-events:none}
+.sub{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.editrow{display:flex;gap:8px}
+.editrow .btn{height:44px;font-size:14px;border-radius:14px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="sheet"></div>
+<div id="toast"></div>
+<script>
+const DEFAULT_MENU={"cats": [{"name": "Завтраки", "bar": false, "items": [{"id": "m1", "name": "блинчики с нутеллой и свежими ягодами", "price": 650, "desc": "", "stop": false}, {"id": "m2", "name": "сырники с ягодным кули и сметаной", "price": 650, "desc": "", "stop": false}, {"id": "m3", "name": "Блюдо из 3 яиц", "price": 190, "desc": "", "stop": false}, {"id": "m4", "name": "Каша из цельнозерновой пшеницы с соленой карамелью и сезонными ягодами", "price": 290, "desc": "", "stop": false}, {"id": "m5", "name": "Каша рисовая с маринованным персиком", "price": 290, "desc": "", "stop": false}, {"id": "m6", "name": "Каша овсяная с моченым яблоком и гранолой", "price": 290, "desc": "", "stop": false}, {"id": "m7", "name": "Панини с куриной грудкой", "price": 420, "desc": "", "stop": false}, {"id": "m8", "name": "Панини с ветчиной из индейки", "price": 450, "desc": "", "stop": false}, {"id": "m9", "name": "Блинчики с телятиной", "price": 580, "desc": "", "stop": false}, {"id": "m10", "name": "Блинчики с грибами", "price": 550, "desc": "", "stop": false}, {"id": "m11", "name": "Скрембл с креветками и авокадо", "price": 690, "desc": "", "stop": false}, {"id": "m12", "name": "Зеленый комбо с форелью и скрембелом", "price": 680, "desc": "", "stop": false}, {"id": "m13", "name": "Комбо с индейкой", "price": 420, "desc": "", "stop": false}, {"id": "m14", "name": "Яйца бенедикт с форелью и соусом голландез", "price": 720, "desc": "", "stop": false}, {"id": "m15", "name": "Английский завтрак", "price": 850, "desc": "", "stop": false}, {"id": "m16", "name": "Омлет с грибами и миксом салата", "price": 380, "desc": "", "stop": false}, {"id": "m17", "name": "Омлет с индейкой и сыром пармезан", "price": 350, "desc": "", "stop": false}, {"id": "m18", "name": "Омлет с сыром и шпинатом", "price": 320, "desc": "", "stop": false}, {"id": "m19", "name": "Завтрак студента", "price": 450, "desc": "", "stop": false}, {"id": "m20", "name": "Драник с гуакамоле с форелью и сливочным соусом", "price": 650, "desc": "", "stop": false}, {"id": "m21", "name": "Шакшука с томатами", "price": 520, "desc": "", "stop": false}], "id": "c1"}, {"name": "Закуски", "bar": false, "items": [{"id": "m22", "name": "Ассорти намазок", "price": 790, "desc": "", "stop": false}, {"id": "m23", "name": "Ассорти Сыров", "price": 1150, "desc": "", "stop": false}, {"id": "m24", "name": "Ассорти мезе", "price": 450, "desc": "", "stop": false}, {"id": "m25", "name": "Хумус соусом чимичури томатами авокадо", "price": 480, "desc": "", "stop": false}, {"id": "m26", "name": "Паштет из индейки с мини питой", "price": 490, "desc": "", "stop": false}, {"id": "m27", "name": "Паштет из лосося с крутонами", "price": 790, "desc": "", "stop": false}, {"id": "m28", "name": "Тартар из форели с зелёным яблоком и соусом юдзу", "price": 990, "desc": "", "stop": false}, {"id": "m29", "name": "Ассорти из вяленых мясных деликатесов", "price": 490, "desc": "", "stop": false}, {"id": "m30", "name": "Севиче из гребешка", "price": 530, "desc": "", "stop": false}, {"id": "m31", "name": "Вителло Тонато", "price": 820, "desc": "", "stop": false}, {"id": "m32", "name": "Запечённая свёкла с сыром", "price": 480, "desc": "", "stop": false}, {"id": "m33", "name": "Тартар из говядины с соусом Васаби", "price": 650, "desc": "", "stop": false}, {"id": "m34", "name": "Карпаччо из говядины с вялеными томатами", "price": 750, "desc": "", "stop": false}, {"id": "m35", "name": "Брускетта с авокадо креветками и томатами", "price": 680, "desc": "", "stop": false}, {"id": "m36", "name": "Брускетта с копчёным эсколаром и рукколой", "price": 850, "desc": "", "stop": false}, {"id": "m37", "name": "Брускетта с форелью и редиса вым соусом", "price": 790, "desc": "", "stop": false}, {"id": "m38", "name": "Зеленый салат с киноа авокадо", "price": 650, "desc": "", "stop": false}, {"id": "m39", "name": "Салат с морепродуктами", "price": 950, "desc": "", "stop": false}, {"id": "m40", "name": "Салат нисуаз", "price": 680, "desc": "", "stop": false}, {"id": "m41", "name": "Салат греческий", "price": 690, "desc": "", "stop": false}, {"id": "m42", "name": "Маринованный баклажаны с томатами", "price": 490, "desc": "", "stop": false}, {"id": "m43", "name": "Свежий салат", "price": 450, "desc": "", "stop": false}, {"id": "m44", "name": "Теплый салат с телятиной", "price": 620, "desc": "", "stop": false}, {"id": "m45", "name": "Цезарь с креветками", "price": 850, "desc": "", "stop": false}, {"id": "m46", "name": "Цезарь с курицей", "price": 620, "desc": "", "stop": false}, {"id": "m47", "name": "Буратта с томатами с соусом песто", "price": 850, "desc": "", "stop": false}, {"id": "m48", "name": "Теплый салат с кальмаром", "price": 750, "desc": "", "stop": false}, {"id": "m49", "name": "Салат с форелью авокадо и яйцо пашот", "price": 890, "desc": "", "stop": false}, {"id": "m50", "name": "Салат с креветками и рукколой", "price": 950, "desc": "", "stop": false}], "id": "c2"}, {"name": "Роллы", "bar": false, "items": [{"id": "m51", "name": "Ролл филадельфия", "price": 950, "desc": "", "stop": false}, {"id": "m52", "name": "Ролл калифорния", "price": 650, "desc": "", "stop": false}, {"id": "m53", "name": "Канадский ролл", "price": 850, "desc": "", "stop": false}, {"id": "m54", "name": "Грин ролл с авокадо", "price": 690, "desc": "", "stop": false}, {"id": "m55", "name": "Ролл трюфель", "price": 750, "desc": "", "stop": false}], "id": "c3"}, {"name": "Боулы", "bar": false, "items": [{"id": "m56", "name": "Боул с тигровыми креветками", "price": 750, "desc": "", "stop": false}, {"id": "m57", "name": "Боул с курицей терьяки", "price": 650, "desc": "", "stop": false}, {"id": "m58", "name": "Боул с лососем", "price": 810, "desc": "", "stop": false}], "id": "c4"}, {"name": "Горячие закуски", "bar": false, "items": [{"id": "m59", "name": "Говяжья мозговая кость", "price": 790, "desc": "", "stop": false}, {"id": "m60", "name": "Тигровые креветки в кляре с соусом васаби", "price": 880, "desc": "", "stop": false}, {"id": "m61", "name": "Мини чебуреки с говядиной", "price": 390, "desc": "", "stop": false}, {"id": "m62", "name": "Мини чебуреки с курицей", "price": 350, "desc": "", "stop": false}, {"id": "m63", "name": "Пицетта Маргарита", "price": 390, "desc": "", "stop": false}, {"id": "m64", "name": "Пицетта с курицей", "price": 450, "desc": "", "stop": false}, {"id": "m65", "name": "Пицетта с грибами", "price": 490, "desc": "", "stop": false}, {"id": "m66", "name": "Сендвич крок-месье", "price": 750, "desc": "", "stop": false}], "id": "c5"}, {"name": "Супы", "bar": false, "items": [{"id": "m67", "name": "Луковый суп", "price": 520, "desc": "", "stop": false}, {"id": "m68", "name": "Том ям", "price": 980, "desc": "", "stop": false}, {"id": "m69", "name": "Борщ", "price": 480, "desc": "", "stop": false}, {"id": "m70", "name": "Куриный бульон с ризонни", "price": 380, "desc": "", "stop": false}, {"id": "m71", "name": "Суп буйабес с морепродуктами", "price": 750, "desc": "", "stop": false}, {"id": "m72", "name": "Сливочный суп с лососем", "price": 650, "desc": "", "stop": false}, {"id": "m73", "name": "Грибной суп", "price": 580, "desc": "", "stop": false}, {"id": "m74", "name": "Шорпо из говядины", "price": 650, "desc": "", "stop": false}, {"id": "m75", "name": "Окрошка на айране", "price": 580, "desc": "", "stop": false}, {"id": "m76", "name": "Кукси", "price": 550, "desc": "", "stop": false}], "id": "c6"}, {"name": "Пасты", "bar": false, "items": [{"id": "m77", "name": "Пельмени с кониной", "price": 720, "desc": "", "stop": false}, {"id": "m78", "name": "Спагетти с вонголе", "price": 790, "desc": "", "stop": false}, {"id": "m79", "name": "Спагетти с морепродуктами", "price": 890, "desc": "", "stop": false}, {"id": "m80", "name": "Фетучини с форелью", "price": 1100, "desc": "", "stop": false}, {"id": "m81", "name": "Лазанья с телятиной", "price": 980, "desc": "", "stop": false}, {"id": "m82", "name": "Карбонара с цыпленкой", "price": 780, "desc": "", "stop": false}, {"id": "m83", "name": "Равиоли с сыром", "price": 680, "desc": "", "stop": false}, {"id": "m84", "name": "Спагетти болоньезе с кониной", "price": 680, "desc": "", "stop": false}], "id": "c7"}, {"name": "Основные блюда", "bar": false, "items": [{"id": "m85", "name": "Куриная котлета с картофельным пюре и грибным соусом", "price": 790, "desc": "", "stop": false}, {"id": "m86", "name": "Говяжья грудинка конфи с перцем рамиро", "price": 1450, "desc": "", "stop": false}, {"id": "m87", "name": "Бефстроганов", "price": 990, "desc": "", "stop": false}, {"id": "m88", "name": "Куриная грудка с овощами", "price": 690, "desc": "", "stop": false}, {"id": "m89", "name": "Тигровые креветки с рисом и овощами", "price": 990, "desc": "", "stop": false}, {"id": "m90", "name": "Говяжий язык с картофельным пюре", "price": 980, "desc": "", "stop": false}, {"id": "m91", "name": "Томленая говядина с перлотто", "price": 990, "desc": "", "stop": false}, {"id": "m92", "name": "Фиш&Чипс", "price": 650, "desc": "", "stop": false}, {"id": "m93", "name": "Филе форели со шпинатом и бобами эдемаме", "price": 1250, "desc": "", "stop": false}, {"id": "m94", "name": "Филе лосося с припущеным шпинатом", "price": 1350, "desc": "", "stop": false}, {"id": "m95", "name": "Мидии в соусе дор блю", "price": 990, "desc": "", "stop": false}, {"id": "m96", "name": "Филе дорадо с овощами и картофельной корочкой", "price": 1350, "desc": "", "stop": false}], "id": "c8"}, {"name": "Блюда из печи Josper", "bar": false, "items": [{"id": "m97", "name": "Биф бургер", "price": 990, "desc": "", "stop": false}, {"id": "m98", "name": "Чикен бургер", "price": 690, "desc": "", "stop": false}, {"id": "m99", "name": "Рибай стейк 100 гр", "price": 650, "desc": "", "stop": false}, {"id": "m100", "name": "Бон филе", "price": 1250, "desc": "", "stop": false}, {"id": "m101", "name": "Шашлык из баранины", "price": 1280, "desc": "", "stop": false}, {"id": "m102", "name": "Шашлык из курицы", "price": 650, "desc": "", "stop": false}, {"id": "m103", "name": "Люля кебаб из баранины", "price": 1350, "desc": "", "stop": false}, {"id": "m104", "name": "Тушка сибаса 100 гр", "price": 480, "desc": "", "stop": false}, {"id": "m105", "name": "Каре ягненка с картофельным гратеном", "price": 1200, "desc": "", "stop": false}, {"id": "m106", "name": "Цыпленок табака с мини картофелем", "price": 1150, "desc": "", "stop": false}], "id": "c9"}, {"name": "Гарниры", "bar": false, "items": [{"id": "m107", "name": "Картофельное пюре", "price": 250, "desc": "", "stop": false}, {"id": "m108", "name": "Цветная капуста с брокколи", "price": 180, "desc": "", "stop": false}, {"id": "m109", "name": "Картофель фри", "price": 220, "desc": "", "stop": false}, {"id": "m110", "name": "Картошка по деревенски", "price": 220, "desc": "", "stop": false}, {"id": "m111", "name": "Овощи гриль", "price": 350, "desc": "", "stop": false}, {"id": "m112", "name": "Рис", "price": 180, "desc": "", "stop": false}, {"id": "m113", "name": "Припущенный шпинат", "price": 180, "desc": "", "stop": false}], "id": "c10"}, {"name": "Десерты", "bar": false, "items": [{"id": "m114", "name": "Тирамису", "price": 550, "desc": "", "stop": false}, {"id": "m115", "name": "Анна павлова", "price": 520, "desc": "", "stop": false}, {"id": "m116", "name": "Шоколадный фондан", "price": 480, "desc": "", "stop": false}, {"id": "m117", "name": "Грушевый пирог", "price": 450, "desc": "", "stop": false}, {"id": "m118", "name": "Сан себастьян", "price": 590, "desc": "", "stop": false}, {"id": "m119", "name": "Медовик", "price": 430, "desc": "", "stop": false}, {"id": "m120", "name": "Милфьей с ягодами", "price": 450, "desc": "", "stop": false}], "id": "c11"}, {"name": "Чай", "bar": true, "items": [{"id": "m121", "name": "Ассас дижу", "price": 290, "desc": "", "stop": false}, {"id": "m122", "name": "Сенча", "price": 290, "desc": "", "stop": false}, {"id": "m123", "name": "Эрл грей", "price": 290, "desc": "", "stop": false}, {"id": "m124", "name": "Жасминовый", "price": 290, "desc": "", "stop": false}, {"id": "m125", "name": "Те гуань инь", "price": 290, "desc": "", "stop": false}, {"id": "m126", "name": "Молочный улун", "price": 290, "desc": "", "stop": false}, {"id": "m127", "name": "Пуэр", "price": 290, "desc": "", "stop": false}], "id": "c12"}, {"name": "Ягодный чай", "bar": true, "items": [{"id": "m128", "name": "Ягодный чай с мятой", "price": 490, "desc": "", "stop": false}, {"id": "m129", "name": "Облепиха-апельсин", "price": 490, "desc": "", "stop": false}, {"id": "m130", "name": "Марроканский", "price": 490, "desc": "", "stop": false}, {"id": "m131", "name": "Имбирный", "price": 490, "desc": "", "stop": false}, {"id": "m132", "name": "Яблоко-корица", "price": 490, "desc": "", "stop": false}, {"id": "m133", "name": "Ташкентский", "price": 490, "desc": "", "stop": false}], "id": "c13"}, {"name": "Холодный чай", "bar": true, "items": [{"id": "m134", "name": "Айс чай черный", "price": 290, "desc": "", "stop": false}, {"id": "m135", "name": "Айс чай зеленый", "price": 290, "desc": "", "stop": false}], "id": "c14"}, {"name": "Милкшейки", "bar": true, "items": [{"id": "m136", "name": "Ванильный", "price": 490, "desc": "", "stop": false}, {"id": "m137", "name": "Клубничный", "price": 490, "desc": "", "stop": false}, {"id": "m138", "name": "Шоколадный", "price": 490, "desc": "", "stop": false}], "id": "c15"}, {"name": "Смузи", "bar": true, "items": [{"id": "m139", "name": "Ананас-шпинат", "price": 490, "desc": "", "stop": false}, {"id": "m140", "name": "Ананас-клубника", "price": 490, "desc": "", "stop": false}, {"id": "m141", "name": "Манго-кокос", "price": 490, "desc": "", "stop": false}, {"id": "m142", "name": "Ягодный", "price": 490, "desc": "", "stop": false}, {"id": "m143", "name": "Вишня-персик", "price": 490, "desc": "", "stop": false}], "id": "c16"}, {"name": "Кофе", "bar": true, "items": [{"id": "m144", "name": "Капучино 250 мл", "price": 210, "desc": "", "stop": false}, {"id": "m145", "name": "Капучино 300 мл", "price": 270, "desc": "", "stop": false}, {"id": "m146", "name": "Латте", "price": 270, "desc": "", "stop": false}, {"id": "m147", "name": "Флет уайт", "price": 250, "desc": "", "stop": false}, {"id": "m148", "name": "Раф кофе", "price": 350, "desc": "", "stop": false}, {"id": "m149", "name": "Эспрессо", "price": 130, "desc": "", "stop": false}, {"id": "m150", "name": "Американо 250 мл", "price": 170, "desc": "", "stop": false}, {"id": "m151", "name": "Мокко классический", "price": 350, "desc": "", "stop": false}], "id": "c17"}, {"name": "Холодный кофе", "bar": true, "items": [{"id": "m152", "name": "Айс американо", "price": 190, "desc": "", "stop": false}, {"id": "m153", "name": "Айс латте", "price": 280, "desc": "", "stop": false}, {"id": "m154", "name": "Айс капучино", "price": 290, "desc": "", "stop": false}, {"id": "m155", "name": "Айс латте на альтернативном", "price": 320, "desc": "", "stop": false}, {"id": "m156", "name": "Айс капучино на альтернативном", "price": 350, "desc": "", "stop": false}, {"id": "m157", "name": "Эспрессо-тоник", "price": 320, "desc": "", "stop": false}, {"id": "m158", "name": "Бамбл классический", "price": 290, "desc": "", "stop": false}, {"id": "m159", "name": "Бамбл на фреше", "price": 490, "desc": "", "stop": false}, {"id": "m160", "name": "Фраппучино", "price": 350, "desc": "", "stop": false}], "id": "c18"}, {"name": "Кофе на альтернативном молоке", "bar": true, "items": [{"id": "m161", "name": "Капучино ( миндаль/кокос ) 250 мл", "price": 240, "desc": "", "stop": false}, {"id": "m162", "name": "Капучино ( миндаль/кокос ) 300 мл", "price": 350, "desc": "", "stop": false}, {"id": "m163", "name": "Латте ( миндаль/кокос )", "price": 320, "desc": "", "stop": false}], "id": "c19"}, {"name": "Некофе", "bar": true, "items": [{"id": "m164", "name": "Горячий шоколад", "price": 350, "desc": "", "stop": false}, {"id": "m165", "name": "Какао", "price": 350, "desc": "", "stop": false}, {"id": "m166", "name": "Hot matcha на коровьем", "price": 350, "desc": "", "stop": false}, {"id": "m167", "name": "Hot matcha на альтернативном", "price": 450, "desc": "", "stop": false}, {"id": "m168", "name": "Ice matcha на коровьем", "price": 350, "desc": "", "stop": false}, {"id": "m169", "name": "Ice matcha на альтернативном", "price": 450, "desc": "", "stop": false}], "id": "c20"}, {"name": "Лимонады 1 л", "bar": true, "items": [{"id": "m170", "name": "Классический", "price": 620, "desc": "", "stop": false}, {"id": "m171", "name": "Манго-маракуйя", "price": 620, "desc": "", "stop": false}, {"id": "m172", "name": "Маракуйя-вишня", "price": 620, "desc": "", "stop": false}, {"id": "m173", "name": "Мохито классический", "price": 620, "desc": "", "stop": false}, {"id": "m174", "name": "Мохито клубничный", "price": 620, "desc": "", "stop": false}, {"id": "m175", "name": "Маракуйя-клубника", "price": 620, "desc": "", "stop": false}, {"id": "m176", "name": "Огурчено-цитрусовый", "price": 620, "desc": "", "stop": false}, {"id": "m177", "name": "Домашний", "price": 620, "desc": "", "stop": false}, {"id": "m178", "name": "Ягодный", "price": 620, "desc": "", "stop": false}], "id": "c21"}, {"name": "Лимонады 0.5 л", "bar": true, "items": [{"id": "m179", "name": "Классический", "price": 320, "desc": "", "stop": false}, {"id": "m180", "name": "Манго-маракуйя", "price": 320, "desc": "", "stop": false}, {"id": "m181", "name": "Маракуйя-вишня", "price": 320, "desc": "", "stop": false}, {"id": "m182", "name": "Мохито классический", "price": 320, "desc": "", "stop": false}, {"id": "m183", "name": "Мохито клубничный", "price": 320, "desc": "", "stop": false}, {"id": "m184", "name": "Маракуйя-клубника", "price": 320, "desc": "", "stop": false}, {"id": "m185", "name": "Огурчено-цитрусовый", "price": 320, "desc": "", "stop": false}, {"id": "m186", "name": "Домашний", "price": 320, "desc": "", "stop": false}, {"id": "m187", "name": "Ягодный", "price": 320, "desc": "", "stop": false}], "id": "c22"}, {"name": "Фреши", "bar": true, "items": [{"id": "m188", "name": "Морковный", "price": 300, "desc": "", "stop": false}, {"id": "m189", "name": "Яблочный", "price": 390, "desc": "", "stop": false}, {"id": "m190", "name": "Яблочно-морковный", "price": 350, "desc": "", "stop": false}, {"id": "m191", "name": "Грейпфрут", "price": 490, "desc": "", "stop": false}], "id": "c23"}, {"name": "Напитки", "bar": true, "items": [{"id": "m192", "name": "Cola 250", "price": 170, "desc": "", "stop": false}, {"id": "m193", "name": "Cola zero 250", "price": 170, "desc": "", "stop": false}, {"id": "m194", "name": "Legenda 330", "price": 170, "desc": "", "stop": false}, {"id": "m195", "name": "Legenda 750", "price": 250, "desc": "", "stop": false}, {"id": "m196", "name": "Arashan", "price": 210, "desc": "", "stop": false}, {"id": "m197", "name": "Швепс", "price": 250, "desc": "", "stop": false}, {"id": "m198", "name": "Сок rich", "price": 290, "desc": "", "stop": false}], "id": "c24"}, {"name": "Пиво", "bar": true, "items": [{"id": "m199", "name": "Corona extra", "price": 450, "desc": "", "stop": false}, {"id": "m200", "name": "Карлсберг «0»", "price": 350, "desc": "", "stop": false}, {"id": "m201", "name": "Stella artois", "price": 390, "desc": "", "stop": false}], "id": "c25"}, {"name": "Разливное пиво", "bar": true, "items": [{"id": "m202", "name": "Blanc 0.3", "price": 350, "desc": "", "stop": false}, {"id": "m203", "name": "Blanc 0.5", "price": 420, "desc": "", "stop": false}, {"id": "m204", "name": "Карлсберг 0.3", "price": 350, "desc": "", "stop": false}, {"id": "m205", "name": "Карлсберг 0.5", "price": 420, "desc": "", "stop": false}], "id": "c26"}, {"name": "Водка", "bar": true, "items": [{"id": "m206", "name": "Настроение", "price": 250, "desc": "", "stop": false}, {"id": "m207", "name": "Бельведер", "price": 550, "desc": "", "stop": false}, {"id": "m208", "name": "Beluga", "price": 550, "desc": "", "stop": false}, {"id": "m209", "name": "Finlandia", "price": 350, "desc": "", "stop": false}, {"id": "m210", "name": "Grey goose", "price": 650, "desc": "", "stop": false}], "id": "c27"}, {"name": "Ликеры", "bar": true, "items": [{"id": "m211", "name": "Бейлис", "price": 450, "desc": "", "stop": false}, {"id": "m212", "name": "Кампари", "price": 420, "desc": "", "stop": false}, {"id": "m213", "name": "Апероль", "price": 420, "desc": "", "stop": false}, {"id": "m214", "name": "Ягермейстер", "price": 450, "desc": "", "stop": false}, {"id": "m215", "name": "Магдала", "price": 450, "desc": "", "stop": false}], "id": "c28"}, {"name": "Джин", "bar": true, "items": [{"id": "m216", "name": "Gordons", "price": 450, "desc": "", "stop": false}, {"id": "m217", "name": "Bombey sapphire", "price": 490, "desc": "", "stop": false}, {"id": "m218", "name": "Hendriks", "price": 650, "desc": "", "stop": false}], "id": "c29"}, {"name": "Бренди", "bar": true, "items": [{"id": "m219", "name": "Кыргызстан", "price": 290, "desc": "", "stop": false}, {"id": "m220", "name": "Hennesey VS", "price": 650, "desc": "", "stop": false}, {"id": "m221", "name": "Hennesey VSOP", "price": 1250, "desc": "", "stop": false}, {"id": "m222", "name": "Hennesey XO", "price": 2400, "desc": "", "stop": false}], "id": "c30"}, {"name": "Ром", "bar": true, "items": [{"id": "m223", "name": "Bacardi carta balanca", "price": 450, "desc": "", "stop": false}, {"id": "m224", "name": "Bacardi carta negra", "price": 450, "desc": "", "stop": false}, {"id": "m225", "name": "Bacardi spicy", "price": 450, "desc": "", "stop": false}], "id": "c31"}, {"name": "Текила", "bar": true, "items": [{"id": "m226", "name": "Jose cuervo blanco", "price": 450, "desc": "", "stop": false}, {"id": "m227", "name": "Jose cuervo reposado", "price": 450, "desc": "", "stop": false}], "id": "c32"}, {"name": "Аперитивы", "bar": true, "items": [{"id": "m228", "name": "Martini bianco", "price": 450, "desc": "", "stop": false}, {"id": "m229", "name": "Martini rosso", "price": 450, "desc": "", "stop": false}], "id": "c33"}, {"name": "Виски · Шотландия", "bar": true, "items": [{"id": "m230", "name": "Talisker", "price": 850, "desc": "", "stop": false}, {"id": "m231", "name": "Famous grouse", "price": 450, "desc": "", "stop": false}, {"id": "m232", "name": "Chivas regal 12", "price": 790, "desc": "", "stop": false}, {"id": "m233", "name": "Chivas regal 18", "price": 1490, "desc": "", "stop": false}, {"id": "m234", "name": "Glenfiddich 12", "price": 890, "desc": "", "stop": false}, {"id": "m235", "name": "Glenmorange 12", "price": 790, "desc": "", "stop": false}, {"id": "m236", "name": "Macallan 12", "price": 1290, "desc": "", "stop": false}, {"id": "m237", "name": "Macallan 15", "price": 2590, "desc": "", "stop": false}], "id": "c34"}, {"name": "Виски · Ирландия", "bar": true, "items": [{"id": "m238", "name": "Bushmills", "price": 490, "desc": "", "stop": false}, {"id": "m239", "name": "Jameson", "price": 490, "desc": "", "stop": false}, {"id": "m240", "name": "Tullamor dew", "price": 490, "desc": "", "stop": false}], "id": "c35"}, {"name": "Виски · Америка", "bar": true, "items": [{"id": "m241", "name": "Jack daniels", "price": 650, "desc": "", "stop": false}, {"id": "m242", "name": "Jim beam", "price": 490, "desc": "", "stop": false}], "id": "c36"}, {"name": "Алкогольные коктейли", "bar": true, "items": [{"id": "m243", "name": "Aperol spritz", "price": 650, "desc": "", "stop": false}, {"id": "m244", "name": "Дайкири", "price": 620, "desc": "", "stop": false}, {"id": "m245", "name": "Маргарита", "price": 620, "desc": "", "stop": false}, {"id": "m246", "name": "Маргарита киви", "price": 620, "desc": "", "stop": false}, {"id": "m247", "name": "Негрони", "price": 620, "desc": "", "stop": false}, {"id": "m248", "name": "Олд фешн", "price": 620, "desc": "", "stop": false}, {"id": "m249", "name": "Виски сауэр", "price": 620, "desc": "", "stop": false}, {"id": "m250", "name": "Mojito", "price": 620, "desc": "", "stop": false}, {"id": "m251", "name": "Porn star martini", "price": 620, "desc": "", "stop": false}, {"id": "m252", "name": "Gin tonic с лаймом/огурцом", "price": 620, "desc": "", "stop": false}, {"id": "m253", "name": "Клубничный апероль сауэр", "price": 620, "desc": "", "stop": false}, {"id": "m254", "name": "Mai tai", "price": 620, "desc": "", "stop": false}, {"id": "m255", "name": "Pink lady", "price": 620, "desc": "", "stop": false}, {"id": "m256", "name": "Yellow sangria", "price": 620, "desc": "", "stop": false}, {"id": "m257", "name": "Клубничная магдала", "price": 620, "desc": "", "stop": false}, {"id": "m258", "name": "Глинтвейн", "price": 620, "desc": "", "stop": false}], "id": "c37"}]};
+const range=(a,b)=>{const r=[];for(let i=a;i<=b;i++)r.push(String(i));return r};
+const DEF_ZONES=()=>[
+ {id:'z1',name:'Терраса 1',tables:range(101,112)},{id:'z2',name:'Терраса 2',tables:range(201,209)},{id:'z3',name:'Терраса 3',tables:range(301,310)},
+ {id:'z4',name:'Винная',tables:range(2,8)},{id:'z5',name:'Кофейная',tables:range(9,13)},{id:'z6',name:'Основной зал',tables:range(14,29)},
+ {id:'z7',name:'VIP терраса',tables:['VIP500']},{id:'z8',name:'VIP винная',tables:['VIP100']}];
+const KEY='waiter-v1';
+const defState=()=>({v:1,ts:0,theme:'light',set:{venue:15,mine:8},zones:DEF_ZONES(),menu:JSON.parse(JSON.stringify(DEFAULT_MENU)),
+ quick:['Средней остроты','Острый','Отдельно','Сразу добавить','Средний сахар','Сладкий'],shift:null,shifts:[],orders:{},archive:[]});
+let S;
+function load(){try{const j=localStorage.getItem(KEY);if(j)return Object.assign(defState(),JSON.parse(j))}catch(e){}return defState()}
+S=load();
+const tg=window.Telegram&&Telegram.WebApp;
+if(tg){try{tg.ready();tg.expand()}catch(e){}}
+const cs=tg&&tg.CloudStorage;
+let saveT,prevChunks=0;
+function save(){S.ts=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}clearTimeout(saveT);saveT=setTimeout(cloudSave,1000)}
+function cloudSave(){if(!cs)return;try{const j=JSON.stringify(S),n=Math.ceil(j.length/3000);for(let i=0;i<n;i++)cs.setItem('w'+i,j.slice(i*3000,(i+1)*3000));cs.setItem('wn',String(n));if(prevChunks>n){const ks=[];for(let i=n;i<prevChunks;i++)ks.push('w'+i);cs.removeItems(ks)}prevChunks=n}catch(e){}}
+function cloudLoad(){if(!cs)return;try{cs.getItem('wn',(e,v)=>{const n=parseInt(v);if(!n)return cloudSave();prevChunks=n;const ks=[];for(let i=0;i<n;i++)ks.push('w'+i);cs.getItems(ks,(e2,o)=>{try{const j=ks.map(k=>o[k]||'').join('');const c=JSON.parse(j);if((c.ts||0)>(S.ts||0)){S=Object.assign(defState(),c);try{localStorage.setItem(KEY,JSON.stringify(S))}catch(x){}render()}}catch(x){}})})}catch(e){}}
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+const uid=()=>Math.random().toString(36).slice(2,9);
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const dur=ms=>{const m=Math.max(0,Math.floor(ms/60000));return Math.floor(m/60)+' ч '+(m%60)+' мин'};
+const tm=ts=>new Date(ts).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+const dd=(ts,o)=>cap(new Date(ts).toLocaleDateString('ru-RU',o));
+const dayKey=ts=>new Date(ts).toLocaleDateString('sv-SE');
+const startOfDay=ts=>{const d=new Date(ts);d.setHours(0,0,0,0);return d.getTime()};
+const monthStart=ts=>{const d=new Date(ts);return new Date(d.getFullYear(),d.getMonth(),1).getTime()};
+const weekStart=ts=>{const d=new Date(startOfDay(ts));const w=(d.getDay()+6)%7;d.setDate(d.getDate()-w);return d.getTime()};
+const salary=c=>Math.round(c*(1-S.set.venue/100)*S.set.mine/100);
+const orderSum=o=>o.lines.reduce((a,l)=>a+l.price*l.qty,0);
+const money=(n,cls)=>`<span class="${cls||'big'}">${fmt(n)} <small>сом</small></span>`;
+const I={
+ moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>',
+ gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+ tables:'<rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/>',
+ menu:'<path d="M9.5 7h10.5M9.5 12h10.5M9.5 17h10.5"/><circle cx="5" cy="7" r="0.6"/><circle cx="5" cy="12" r="0.6"/><circle cx="5" cy="17" r="0.6"/>',
+ cash:'<path d="M5 20V11M12 20V4M19 20v-6"/>',
+ arch:'<rect x="4" y="5" width="16" height="4" rx="1"/><path d="M5.5 9v9a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5V9M10 13h4"/>',
+ clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+ search:'<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/>',
+ check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>'
+};
+const svg=(p,s=24,w=1.7)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+
+/* ---------- ui state ---------- */
+const ui={num:false,screen:'main',tab:'tables',zone:'active',side:'kitchen',cat:null,menuQ:'',menuEdit:false,table:null,q:'',ocat:null,cashView:'pay',period:'month',from:null,to:null,disc:{pct:0,custom:null,note:''},chef:false,last:null,customOn:false};
+const curShiftStart=()=>S.shift?S.shift.start:0;
+const monthName=()=>new Date().toLocaleDateString('ru-RU',{month:'long'});
+
+/* ---------- stats ---------- */
+function stats(os){const ok=os.filter(o=>!o.chef);const cash=ok.reduce((a,o)=>a+o.paid,0);return{cash,salary:salary(cash),n:os.length,chef:os.filter(o=>o.chef).length,disc:os.filter(o=>o.discount>0&&!o.chef).length}}
+const shiftOrders=st=>S.archive.filter(o=>o.shiftStart===st);
+const periodOrders=(a,b)=>S.archive.filter(o=>o.closedAt>=a&&o.closedAt<=b);
+const allShifts=()=>S.shifts.concat(S.shift?[{start:S.shift.start,end:null}]:[]);
+function monthStats(){const a=monthStart(Date.now());return stats(periodOrders(a,Date.now()+1))}
+
+/* ---------- search ---------- */
+const L2C={a:'а',b:'б',c:'к',d:'д',e:'е',f:'ф',g:'г',h:'х',i:'и',j:'дж',k:'к',l:'л',m:'м',n:'н',o:'о',p:'п',q:'к',r:'р',s:'с',t:'т',u:'у',v:'в',w:'в',x:'кс',y:'и',z:'з'};
+const tr=s=>s.replace(/[a-z]/g,c=>L2C[c]||c);
+const norm=s=>s.toLowerCase().replace(/ё/g,'е');
+function tokens(q){return norm(q).split(/\s+/).filter(Boolean)}
+function matchItem(it,cat,toks){const hay=norm(it.name+' '+cat.name+' '+(it.desc||''));const hay2=tr(hay);const p=String(it.price);
+ return toks.every(t=>/^\d+$/.test(t)?(hay.includes(t)||p.startsWith(t)):(hay.includes(t)||hay2.includes(t)||hay.includes(tr(t))))}
+function find(q,side){const toks=tokens(q),r=[];S.menu.cats.forEach(c=>{if(side&&(c.bar?'bar':'kitchen')!==side)return;c.items.forEach(it=>{if(matchItem(it,c,toks))r.push({it,c})})});return r}
+function hl(text,toks){const real=toks.filter(t=>t.length>0).map(t=>t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));if(!real.length)return esc(text);const re=new RegExp('('+real.join('|')+')','gi');return text.split(re).map((p,i)=>i%2?'<mark>'+esc(p)+'</mark>':esc(p)).join('')}
+const findItem=id=>{for(const c of S.menu.cats){const it=c.items.find(i=>i.id===id);if(it)return{it,c}}return null};
+
+/* ---------- screens ---------- */
+function themeBtn(){return `<button class="round" data-act="theme" aria-label="Сменить тему">${svg(S.theme==='dark'?I.sun:I.moon,20,1.8)}</button>`}
+function gearBtn(){return `<button class="round" data-act="settings" aria-label="Настройки">${svg(I.gear,20,1.8)}</button>`}
+function nav(){const t=[['tables','Столы',I.tables],['menu','Меню',I.menu],['cash','Касса',I.cash],['arch','Архив',I.arch]];return `<nav class="nav">${t.map(([k,n,p])=>`<button class="${ui.tab===k?'on':''}" data-act="tab" data-v="${k}">${svg(p)}<span>${n}</span></button>`).join('')}</nav>`}
+
+function startScreen(){
+ const past=S.shifts.slice(-3).reverse();
+ const rows=past.map(s=>{const st=stats(shiftOrders(s.start));return `<div class="row sepl" style="padding:12px 0 6px;align-items:center"><div style="display:flex;flex-direction:column;gap:2px"><b style="font-size:15px">${dd(s.start,{weekday:'short',day:'numeric',month:'long'})}</b><span class="sec small">${dur(s.end-s.start)} · касса ${fmt(st.cash)}</span></div><b class="acc" style="font-size:16px">${fmt(st.salary)}</b></div>`}).join('');
+ const ms=monthStats();const mh=allShifts().filter(s=>s.start>=monthStart(Date.now())).reduce((a,s)=>a+((s.end||Date.now())-s.start),0);const mc=allShifts().filter(s=>s.start>=monthStart(Date.now())).length;
+ return `<div class="scroll"><div class="hd"><div class="l"><span class="small sec" style="font-weight:500">${dd(Date.now(),{weekday:'long',day:'numeric',month:'long'})}</span><h1>Смена</h1></div><div style="display:flex;gap:10px">${gearBtn()}${themeBtn()}</div></div>
+ <div class="card" style="padding:20px;gap:18px"><div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px 0 4px"><div class="ico">${svg(I.clock,30,1.6)}</div><b style="font-size:22px;letter-spacing:-.02em">Смена не открыта</b><span class="sec" style="font-size:14px;line-height:1.4;text-align:center">Открой смену, чтобы записывать заказы и считать кассу</span></div><button class="btn" data-act="openShift">Открыть смену</button></div>
+ ${past.length?`<div class="card" style="padding:16px 20px 6px;gap:4px"><span class="sec small" style="font-weight:600">Прошлые смены</span>${rows}</div>`:''}
+ <div class="card" style="padding:16px 20px;gap:4px"><div class="row" style="align-items:baseline"><span class="k">${cap(monthName())}</span><b class="acc" style="font-size:20px;letter-spacing:-.02em">${fmt(ms.salary)} <small class="sec" style="font-size:13px;font-weight:500">сом</small></b></div><div class="sec small">${mc} ${mc===1?'смена':'смен'} · ${dur(mh)}</div></div></div>`}
+
+function tableInfo(label){
+ const o=S.orders[label];
+ if(o&&o.lines.length)return{k:o.lines.every(l=>l.served)?'served':'wait',sum:orderSum(o),o};
+ const c=S.shift&&[...S.archive].reverse().find(x=>x.table===label&&x.shiftStart===S.shift.start);
+ if(c)return{k:'closed',sum:c.total};
+ return{k:'free'}}
+function tile(label){const t=tableInfo(label);const long=label.length>3;const n=`<span class="n${long?' s':''}">${esc(label)}</span>`;
+ if(t.k==='free')return `<button class="tile free" data-act="openTable" data-v="${esc(label)}">${n}<span class="st sec">Свободен</span></button>`;
+ const col=t.k==='wait'?['var(--da)','var(--amb)','Ждёт заказ']:t.k==='served'?['var(--dg)','var(--grn)','Заказ отдан']:['var(--bar)','var(--sec)','Закрыт'];
+ return `<button class="tile ${t.k==='closed'?'closed':''}" data-act="openTable" data-v="${esc(label)}"><span class="top">${n}<i style="background:${col[0]}"></i></span><span class="bt"><span class="st" style="color:${col[1]}">${col[2]}</span><span class="p">${fmt(t.sum)}</span></span></button>`}
+function tablesScreen(){
+ if(!S.shift)return startScreen();
+ const sh=stats(shiftOrders(S.shift.start)),ms=monthStats();
+ const zones=[{id:'active',name:'Активные'}].concat(S.zones);
+ let labels;
+ if(ui.zone==='active')labels=S.zones.flatMap(z=>z.tables).filter(l=>S.orders[l]&&S.orders[l].lines.length);else{const z=S.zones.find(z=>z.id===ui.zone)||S.zones[0];labels=z.tables}
+ return `<div class="scroll"><div class="hd"><div class="l"><button class="live" data-act="endShift"><i></i>Смена идёт · ${dur(Date.now()-S.shift.start)}</button><h1>Столы</h1></div><div style="display:flex;gap:10px">${gearBtn()}${themeBtn()}</div></div>
+ <div class="card"><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div style="display:flex;flex-direction:column;gap:2px"><span class="small sec">Касса за смену</span>${money(sh.cash)}</div><div style="display:flex;flex-direction:column;gap:2px"><span class="small sec">Зарплата за смену</span><span class="big acc">${fmt(sh.salary)} <small>сом</small></span></div></div>
+ <div class="sepl small sec" style="display:flex;justify-content:space-between"><span>За ${monthName()}: ${fmt(ms.cash)} сом</span><span>Зарплата ${fmt(ms.salary)} сом</span></div></div>
+ <div class="chips">${zones.map(z=>`<button class="chip ${ui.zone===z.id?'on':''}" data-act="zone" data-v="${z.id}">${z.name}</button>`).join('')}</div>
+ ${labels.length?`<div class="grid">${labels.map(tile).join('')}</div>`:`<div class="empty">Нет активных столов.<br>Выбери зону и открой стол</div>`}</div>`}
+
+/* ----- order ----- */
+function orderScreen(){
+ const o=S.orders[ui.table]||{lines:[]};const sum=orderSum(o),done=o.lines.filter(l=>l.served).length;const left=o.lines.length-done;
+ const chip=!o.lines.length?'<span class="pill new">Новый стол</span>':left===0?'<span class="pill ok">Заказ отдан</span>':'<span class="pill wait">Ждёт заказ</span>';
+ const cats=S.menu.cats;
+ return `<div class="scroll" style="gap:14px;padding-bottom:16px"><div class="topbar"><button class="back" data-act="back">Столы</button><span class="t">Стол ${esc(ui.table)}</span>${chip}</div>
+ <div class="search">${svg(I.search,18,1.8)}<input id="q" placeholder="Блюдо, слово или цена" value="${esc(ui.q)}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" inputmode="${ui.num?'numeric':'text'}"><button id="qx" data-act="clearq" style="${ui.q?'':'display:none'}">Отмена</button><button class="kb ${ui.num?'on':''}" data-act="numkb" data-keep aria-label="Цифровая клавиатура">${ui.num?'abc':'123'}</button></div>
+ <div class="chips">${cats.map(c=>`<button class="chip ${ui.ocat===c.id?'on':''}" data-act="ocat" data-v="${c.id}">${esc(c.name)}</button>`).join('')}</div>
+ <div id="ordmain">${orderMain()}</div></div>
+ <div class="bottom"><div class="t"><b>${fmt(sum)} сом</b><span class="small sec">${o.lines.length?'Осталось отдать: '+left:'Пока пусто'}</span></div><button class="btn" data-act="checkout" ${o.lines.length?'':'disabled'}>Закрыть стол</button></div>`}
+function resultsPanel(){
+ let list,head;const o=S.orders[ui.table]||{lines:[]};
+ if(ui.q.trim()){list=find(ui.q);head=`Найдено ${list.length} · «${esc(ui.q.trim())}»`}
+ else{const c=S.menu.cats.find(c=>c.id===ui.ocat);list=c?c.items.map(it=>({it,c})):[];head=c?esc(c.name):''}
+ if(!list.length)return `<div class="panel"><div class="empty">Ничего не найдено</div></div>`;
+ const toks=tokens(ui.q);
+ return `<div class="panel"><div class="hdr">${head}</div>${list.slice(0,80).map(({it,c})=>{const n=o.lines.filter(l=>l.itemId===it.id).reduce((a,l)=>a+l.qty,0);
+ return `<button class="item ${it.stop?'stop':''}" data-act="add" data-v="${it.id}"><span class="nm"><b>${hl(it.name,toks)}</b><span>${esc(it.desc||c.name)}${c.bar&&it.desc?'':''}</span></span>${it.stop?'<span class="pill new">Стоп</span>':n?`<span class="badge">${n}</span>`:''}<span class="pr">${fmt(it.price)}</span></button>`}).join('')}</div>`}
+function orderCard(){
+ const o=S.orders[ui.table]||{lines:[]};
+ if(!o.lines.length)return `<div class="card"><div class="empty" style="padding:14px 0">Найди блюдо через поиск или выбери раздел</div></div>`;
+ const done=o.lines.filter(l=>l.served).length;
+ return `<div class="panel" style="padding-top:0"><div class="hdr sub"><span>Заказ</span><span>Отдано ${done} из ${o.lines.length}</span></div>${o.lines.map(l=>`<div class="line ${l.served?'done':''}"><button class="ck" data-act="serve" data-v="${l.id}" aria-label="Отдано">${l.served?svg(I.check,15,2.6):''}</button><button class="body" data-act="editLine" data-v="${l.id}"><b>${esc(l.name)}${l.qty>1?' ×'+l.qty:''}</b>${l.comment?`<span>«${esc(l.comment)}»</span>`:''}</button><span class="sm">${fmt(l.price*l.qty)}</span></div>`).join('')}
+ <div class="sub sepl" style="padding-bottom:12px"><span class="small sec">Нажми на кружок, чтобы отметить отданной</span>${done<o.lines.length?`<button class="link" style="height:auto" data-act="serveAll">Отдать всё</button>`:''}</div></div>`}
+function orderMain(){const show=ui.q.trim()||ui.ocat;return (show?resultsPanel():'')+(show?`<div class="dim">${orderCard()}</div>`:orderCard())}
+function refreshOrder(){const m=$('#ordmain');if(m){const sc=$('.scroll');const t=sc.scrollTop;m.innerHTML=orderMain();sc.scrollTop=t}const x=$('#qx');if(x)x.style.display=ui.q?'':'none';updBottom();document.querySelectorAll('.chips .chip').forEach(c=>{if(c.dataset.act==='ocat')c.classList.toggle('on',c.dataset.v===ui.ocat)})}
+function updBottom(){const b=$('.bottom');if(!b)return;const o=S.orders[ui.table]||{lines:[]};const left=o.lines.filter(l=>!l.served).length;b.querySelector('b').textContent=fmt(orderSum(o))+' сом';b.querySelector('.small').textContent=o.lines.length?'Осталось отдать: '+left:'Пока пусто';b.querySelector('.btn').disabled=!o.lines.length;
+ const pill=document.querySelector('.topbar .pill');if(pill){pill.className='pill '+(!o.lines.length?'new':left?'wait':'ok');pill.textContent=!o.lines.length?'Новый стол':left?'Ждёт заказ':'Заказ отдан'}}
+
+/* ----- checkout ----- */
+function discSum(total){if(ui.chef)return 0;if(ui.disc.custom!=null)return Math.min(total,ui.disc.custom);return Math.round(total*ui.disc.pct/100)}
+function checkoutScreen(){
+ const o=S.orders[ui.table];const total=orderSum(o);const ds=discSum(total);const pay=ui.chef?0:total-ds;
+ const chips=[[0,'Нет'],[5,'5%'],[10,'10% · день рождения'],[15,'15%'],[20,'20%']];
+ const note=ui.disc.pct===10?'день рождения':'';
+ return `<div class="scroll"><div class="topbar"><button class="back" data-act="backOrder">Назад</button><span class="t">Закрыть стол</span><span style="width:40px"></span></div>
+ <div class="card"><div class="row"><span class="k">Стол ${esc(ui.table)} · ${o.lines.length} поз.</span><span>${fmt(total)}</span></div>${ds>0?`<div class="row"><span class="k">Скидка${ui.disc.custom==null?' '+ui.disc.pct+'%':''}${note?' · '+note:''}</span><span style="color:var(--grn)">−${fmt(ds)}</span></div>`:''}
+ <div class="row sepl" style="align-items:baseline"><span class="k">К оплате</span><span class="big" style="font-weight:700">${fmt(pay)} <small>сом</small></span></div></div>
+ <div class="${ui.chef?'dis':''}" style="display:flex;flex-direction:column;gap:10px"><span class="small sec" style="font-weight:600;padding-left:4px">Скидка</span><div class="wrap">${chips.map(([p,n])=>`<button class="chip ${ui.disc.custom==null&&ui.disc.pct===p?'on':''}" data-act="disc" data-v="${p}">${n}</button>`).join('')}<button class="chip ${ui.disc.custom!=null||ui.customOn?'on':''}" data-act="customDisc">Своя сумма</button></div>
+ ${ui.customOn||ui.disc.custom!=null?`<div class="fld"><input id="cdisc" type="number" inputmode="numeric" placeholder="Сумма скидки, сом" value="${ui.disc.custom!=null?ui.disc.custom:''}"></div>`:''}</div>
+ <div class="card" style="padding:14px 18px"><div class="sub"><div style="display:flex;flex-direction:column;gap:2px"><b style="font-size:16px">Гости шефа</b><span class="small sec" style="line-height:1.35">В кассу не идёт, зарплата не считается</span></div><button class="sw ${ui.chef?'on':''}" data-act="chef" role="switch" aria-checked="${ui.chef}"><i></i></button></div></div>
+ ${ui.chef?`<div class="banner pu">В кассу не идёт: ${fmt(total)} сом. Сохранится в архиве с пометкой «Шеф»</div>`:''}
+ <div style="flex:1"></div><button class="btn ${ui.chef?'pu':''}" data-act="pay">Закрыть стол · ${fmt(pay)} сом</button></div>`}
+
+/* ----- end shift ----- */
+function endShiftScreen(){
+ const st=stats(shiftOrders(S.shift.start));const open=S.zones.flatMap(z=>z.tables).filter(l=>S.orders[l]&&S.orders[l].lines.length);
+ const ven=Math.round(st.cash*S.set.venue/100);
+ return `<div class="scroll"><div class="topbar"><button class="back" data-act="backMain">Назад</button><span class="t">Закрыть смену</span><span style="width:40px"></span></div>
+ <div class="card"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><div><span class="small sec">Начало</span><div style="font-size:20px;font-weight:700;letter-spacing:-.02em">${tm(S.shift.start)}</div></div><div><span class="small sec">Сейчас</span><div style="font-size:20px;font-weight:700;letter-spacing:-.02em">${tm(Date.now())}</div></div><div><span class="small sec">Всего</span><div class="acc" style="font-size:20px;font-weight:700;letter-spacing:-.02em">${dur(Date.now()-S.shift.start)}</div></div></div></div>
+ <div class="card" style="gap:10px"><div class="row"><span class="k">Закрыто столов</span><span>${st.n}</span></div><div class="row"><span class="k">Гости шефа</span><span>${st.chef}</span></div><div class="row"><span class="k">Скидки</span><span>${st.disc}</span></div></div>
+ ${open.length?`<div class="banner amb">Не закрыты столы ${open.map(esc).join(', ')}. Их сумма не попадёт в кассу, пока ты их не закроешь</div>`:''}
+ <div class="card" style="gap:10px"><div class="row"><b>Касса за смену</b><b>${fmt(st.cash)}</b></div><div class="row"><span class="k">Заведению, ${S.set.venue}%</span><span>−${fmt(ven)}</span></div><div class="row"><span class="k">Остаток</span><span>${fmt(st.cash-ven)}</span></div><div class="row sepl" style="align-items:baseline"><span class="k">Зарплата, ${S.set.mine}%</span><span class="big acc" style="font-weight:700">${fmt(st.salary)} <small>сом</small></span></div></div>
+ <div style="flex:1"></div><button class="btn" data-act="closeShift">Закрыть смену</button><button class="link" data-act="backMain">Продолжить смену</button></div>`}
+
+/* ----- menu ----- */
+function menuScreen(){
+ const cats=S.menu.cats.filter(c=>(c.bar?'bar':'kitchen')===ui.side);
+ if(!cats.find(c=>c.id===ui.cat))ui.cat=cats[0]&&cats[0].id;
+ const q=ui.menuQ.trim();let body;
+ const stopN=S.menu.cats.reduce((a,c)=>a+c.items.filter(i=>(c.bar?'bar':'kitchen')===ui.side&&i.stop).length,0);
+ const row=(it,c,toks)=>`<div class="item ${it.stop?'stop':''}" ${ui.menuEdit?`data-act="editItem" data-v="${it.id}" style="cursor:pointer"`:''}><span class="nm"><b>${toks?hl(it.name,toks):esc(it.name)}</b><span>${it.stop?'В стопе':''}${it.stop&&it.desc?' · ':''}${esc(it.desc||(toks?c.name:''))}</span></span><span class="pr">${fmt(it.price)}</span>${ui.menuEdit?`<span class="sec">›</span>`:`<button class="sw ${it.stop?'':'on'}" data-act="stop" data-v="${it.id}" role="switch" aria-checked="${!it.stop}"><i></i></button>`}</div>`;
+ if(q){const toks=tokens(q);const r=find(q,ui.side);body=r.length?`<div class="panel">${r.slice(0,80).map(({it,c})=>row(it,c,toks)).join('')}</div>`:`<div class="panel"><div class="empty">Ничего не найдено</div></div>`}
+ else{const c=cats.find(c=>c.id===ui.cat);body=c?`<div class="panel">${c.items.length?c.items.map(it=>row(it,c)).join(''):'<div class="empty">В разделе пока пусто</div>'}</div>`:''}
+ const c=cats.find(c=>c.id===ui.cat);
+ return `<div class="scroll"><div class="hd"><div class="l"><span class="small sec" style="font-weight:500">${ui.menuEdit?'Редактирование':stopN?'В стопе: '+stopN:'Всё в наличии'}</span><h1>Меню</h1></div><button class="round" style="width:auto;padding:0 18px;font-size:15px;font-weight:600;color:var(--acc)" data-act="menuEdit">${ui.menuEdit?'Готово':'Править'}</button></div>
+ <div class="seg"><button class="${ui.side==='kitchen'?'on':''}" data-act="side" data-v="kitchen">Кухня</button><button class="${ui.side==='bar'?'on':''}" data-act="side" data-v="bar">Бар</button></div>
+ <div class="search">${svg(I.search,18,1.8)}<input id="mq" placeholder="Поиск по меню" value="${esc(ui.menuQ)}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search" inputmode="${ui.num?'numeric':'text'}"><button class="kb ${ui.num?'on':''}" data-act="numkb" data-keep aria-label="Цифровая клавиатура">${ui.num?'abc':'123'}</button></div>
+ ${q?'':`<div class="chips">${cats.map(c=>`<button class="chip ${ui.cat===c.id?'on':''}" data-act="mcat" data-v="${c.id}">${esc(c.name)}</button>`).join('')}</div>`}
+ <div id="menubody">${body}</div>
+ ${ui.menuEdit?`<div class="editrow"><button class="btn" data-act="addItem" ${c?'':'disabled'}>+ Позиция</button><button class="btn ghost" data-act="addCat">+ Раздел</button></div>${c&&!q?`<button class="link" data-act="editCat" data-v="${c.id}">Изменить раздел «${esc(c.name)}»</button>`:''}`:''}</div>`}
+function refreshMenu(){const b=$('#menubody');if(!b)return render();const keep=document.activeElement&&document.activeElement.id;render();if(keep){const e=$('#'+keep);if(e){e.focus();const v=e.value;e.setSelectionRange(v.length,v.length)}}}
+
+/* ----- cash ----- */
+function cashScreen(){
+ const seg=`<div class="seg"><button class="${ui.cashView==='pay'?'on':''}" data-act="cview" data-v="pay">Зарплата</button><button class="${ui.cashView==='sh'?'on':''}" data-act="cview" data-v="sh">Смены</button></div>`;
+ const hd=`<div class="hd"><div class="l"><span class="small sec" style="font-weight:500">Касса и зарплата</span><h1>Касса</h1></div></div>`;
+ if(ui.cashView==='sh')return `<div class="scroll">${hd}${seg}${shiftsView()}</div>`;
+ const now=Date.now();let a,b,label;
+ if(ui.period==='shift'){const cur=S.shift||S.shifts[S.shifts.length-1];if(cur){a=cur.start;b=cur.end||now+1}else{a=1;b=0}}
+ else if(ui.period==='week'){a=weekStart(now);b=now+1}
+ else if(ui.period==='month'){a=monthStart(now);b=now+1}
+ else{if(!ui.from)ui.from=dayKey(monthStart(now));if(!ui.to)ui.to=dayKey(now);a=new Date(ui.from+'T00:00:00').getTime();b=new Date(ui.to+'T23:59:59').getTime()}
+ const os=periodOrders(a,b);const st=stats(os);const ven=Math.round(st.cash*S.set.venue/100);const nsh=new Set(os.map(o=>o.shiftStart)).size;
+ const per=(x,y)=>stats(periodOrders(x,y)).salary;
+ const curS=S.shift||S.shifts[S.shifts.length-1];
+ const rowx=(t,s,v,last)=>`<div class="sub" style="height:52px;${last?'':'border-bottom:1px solid var(--line)'}"><div style="display:flex;flex-direction:column;gap:1px"><span style="font-size:16px;font-weight:500">${t}</span><span class="small sec" style="font-size:12px">${s}</span></div><b style="font-size:17px">${fmt(v)} сом</b></div>`;
+ const pn={shift:'смену',week:'неделю',month:'месяц',range:'период'};
+ return `<div class="scroll">${hd}${seg}
+ <div class="seg">${[['shift','Смена'],['week','Неделя'],['month','Месяц'],['range','Период']].map(([k,n])=>`<button class="${ui.period===k?'on':''}" data-act="period" data-v="${k}">${n}</button>`).join('')}</div>
+ ${ui.period==='range'?`<div class="dates"><label>С<input type="date" data-in="from" value="${ui.from}"></label><span class="sec">–</span><label>По<input type="date" data-in="to" value="${ui.to}"></label></div>`:''}
+ <div class="card" style="padding:20px;gap:14px"><div style="display:flex;flex-direction:column;gap:2px"><span class="small sec">Касса за ${pn[ui.period]} · ${nsh} ${nsh===1?'смена':'смен'}</span><span class="hero">${fmt(st.cash)} <small>сом</small></span></div>
+ <div class="sepl" style="display:flex;flex-direction:column;gap:10px"><div class="row"><span class="k">Заведению, ${S.set.venue}%</span><span>−${fmt(ven)}</span></div><div class="row"><span class="k">Остаток</span><span>${fmt(st.cash-ven)}</span></div><div class="row"><b>Зарплата, ${S.set.mine}%</b><b class="acc" style="font-size:20px">${fmt(st.salary)} сом</b></div></div></div>
+ <div class="panel" style="padding:6px 20px"><div class="hdr" style="padding:14px 0 6px;font-weight:500;font-size:13px">Моя зарплата</div>
+ ${rowx('За смену',curS?dd(curS.start,{day:'numeric',month:'long'}):'—',curS?stats(shiftOrders(curS.start)).salary:0)}
+ ${rowx('За неделю','с '+dd(weekStart(now),{day:'numeric',month:'long'}).toLowerCase(),per(weekStart(now),now+1))}
+ ${rowx('За месяц',monthName(),per(monthStart(now),now+1),true)}</div></div>`}
+function shiftsView(){
+ const ms=monthStart(Date.now());const list=allShifts().filter(s=>s.start>=ms);
+ if(!list.length)return `<div class="empty">В этом месяце смен ещё не было</div>`;
+ const rows=list.map(s=>{const st=stats(shiftOrders(s.start));return{s,st,h:((s.end||Date.now())-s.start)}});
+ const th=rows.reduce((a,r)=>a+r.h,0),ts=rows.reduce((a,r)=>a+r.st.salary,0);const max=Math.max(1,...rows.map(r=>r.st.salary));
+ const chart=rows.slice(-31).map((r,i,arr)=>`<div class="${!r.s.end?'cur':''}"><i style="height:${Math.max(6,Math.round(r.st.salary/max*100))}px"></i><span>${new Date(r.s.start).getDate()}</span></div>`).join('');
+ const hrs=th/3600000;
+ return `<div class="sec" style="font-size:15px;padding-left:4px">${cap(monthName())} · ${rows.length} ${rows.length===1?'смена':'смен'} · ${dur(th)}</div>
+ <div class="three"><div><small>Смен</small><b>${rows.length}</b></div><div><small>Часов</small><b>${Math.round(hrs)}</b></div><div><small>сом/час</small><b>${hrs>=0.25?fmt(ts/hrs):'—'}</b></div></div>
+ <div class="card" style="padding:16px 18px 12px;gap:12px"><div class="sub"><span class="small sec" style="font-weight:600">Зарплата по сменам</span><span class="sec" style="font-size:12px">сом</span></div><div class="bars">${chart}</div></div>
+ <div class="panel">${[...rows].reverse().map(r=>`<div class="item" style="cursor:default"><span class="nm"><b>${dd(r.s.start,{weekday:'short',day:'numeric',month:'long'})}${!r.s.end?' · идёт':''}</b><span>${tm(r.s.start)}–${r.s.end?tm(r.s.end):'сейчас'} · ${dur(r.h)} · касса ${fmt(r.st.cash)}</span></span><span class="pr acc">${fmt(r.st.salary)}</span></div>`).join('')}</div>`}
+
+/* ----- archive ----- */
+function archiveScreen(){
+ const list=[...S.archive].sort((a,b)=>b.closedAt-a.closedAt);
+ const groups={};list.forEach(o=>{(groups[dayKey(o.closedAt)]=groups[dayKey(o.closedAt)]||[]).push(o)});
+ const today=dayKey(Date.now()),yest=dayKey(Date.now()-864e5);
+ const html=Object.keys(groups).map(k=>{const g=groups[k];const sum=g.filter(o=>!o.chef).reduce((a,o)=>a+o.paid,0);const nm=k===today?'Сегодня':k===yest?'Вчера':dd(g[0].closedAt,{weekday:'short'});
+ return `<div class="panel"><div class="hdr sub"><span>${nm}, ${dd(g[0].closedAt,{day:'numeric',month:'long'}).toLowerCase()}</span><b style="font-size:14px;color:var(--txt)">${fmt(sum)} сом</b></div>${g.map(o=>`<button class="item" data-act="arcOrder" data-v="${o.id}"><span class="nm"><b>Стол ${esc(o.table)} <span class="sec small" style="font-weight:400">· ${tm(o.closedAt)}</span>${o.chef?'<span class="tag chef">Шеф</span>':o.discount>0?`<span class="tag disc">−${o.discPct?o.discPct+'%':fmt(o.discount)}</span>`:''}</b><span>${o.lines.length} ${o.lines.length===1?'позиция':'поз.'}</span></span><span class="pr" style="${o.chef?'color:var(--sec);text-decoration:line-through':''}">${fmt(o.chef?o.total:o.paid)}</span></button>`).join('')}</div>`}).join('');
+ return `<div class="scroll"><div class="hd"><div class="l"><span class="small sec" style="font-weight:500">Закрытые заказы</span><h1>Архив</h1></div></div>${html||'<div class="empty">Пока нет закрытых заказов</div>'}</div>`}
+
+function tabScreen(){return ui.tab==='tables'?tablesScreen():ui.tab==='menu'?menuScreen():ui.tab==='cash'?cashScreen():archiveScreen()}
+
+function render(){
+ const a=$('#app');const sc=a.querySelector('.scroll');const top=sc?sc.scrollTop:0;const ch=[...a.querySelectorAll('.chips')].map(c=>c.scrollLeft);
+ let h;
+ if(ui.screen==='order')h=orderScreen();else if(ui.screen==='checkout')h=checkoutScreen();else if(ui.screen==='endshift')h=endShiftScreen();else h=tabScreen()+nav();
+ a.innerHTML=h;
+ const s2=a.querySelector('.scroll');if(s2)s2.scrollTop=top;a.querySelectorAll('.chips').forEach((c,i)=>{if(ch[i])c.scrollLeft=ch[i]});
+ document.documentElement.dataset.theme=S.theme;
+ const act=a.querySelector('.chips .chip.on');if(act&&!ch.some(Boolean)){act.scrollIntoView({inline:'center',block:'nearest'})}
+}
+
+/* ---------- sheets ---------- */
+function openSheet(html){$('#toast').classList.remove('on');const s=$('#sheet');s.innerHTML=`<div class="bg" data-act="closeSheet"></div><div class="box"><div class="grab"></div>${html}</div>`;s.classList.add('open')}
+function closeSheet(){const s=$('#sheet');s.classList.remove('open');s.innerHTML=''}
+let toastT;
+function toast(msg,undo){const t=$('#toast');t.innerHTML=`<span>${esc(msg)}</span>${undo?'<button data-act="undo">Отменить</button>':''}`;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),3500)}
+function armed(el,fn){if(el.dataset.armed==='1'){fn();return}el.dataset.armed='1';el.dataset.old=el.innerHTML;el.textContent='Нажми ещё раз, чтобы подтвердить';setTimeout(()=>{if(el.isConnected&&el.dataset.armed==='1'){el.dataset.armed='';el.innerHTML=el.dataset.old}},3000)}
+
+function lineSheet(id){
+ const o=S.orders[ui.table];const l=o&&o.lines.find(x=>x.id===id);if(!l)return closeSheet();
+ openSheet(`<div class="sub"><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><b style="font-size:22px;letter-spacing:-.02em">${esc(l.name)}</b><span class="sec" style="font-size:14px">${fmt(l.price)} сом</span></div><div class="qty"><button data-act="qty" data-v="-1">−</button><span id="qv">${l.qty}</span><button data-act="qty" data-v="1">+</button></div></div>
+ <div class="fld"><label>Комментарий</label><input id="lc" value="${esc(l.comment||'')}" placeholder="Например, без лука"></div>
+ <div class="wrap">${S.quick.map((c,i)=>`<button class="chip" data-act="qc" data-v="${i}">${esc(c)}</button>`).join('')}<button class="chip" style="background:none;color:var(--acc)" data-act="editQuick">Изменить</button></div>
+ <button class="act red" data-act="noStock"><div><b>Нет в наличии</b><span>Убрать из счёта и поставить в стоп-лист</span></div></button>
+ <button class="act red" data-act="delLine"><div><b>Удалить из счёта</b><span>Гость передумал или ошибка</span></div></button>
+ <button class="btn ghost" data-act="closeSheet">Готово</button>`);sheetLine=id}
+let sheetLine=null;
+function quickSheet(back){
+ openSheet(`<b style="font-size:22px;letter-spacing:-.02em">Быстрые комментарии</b><div class="wrap">${S.quick.map((c,i)=>`<span class="cm">${esc(c)}<button class="x" data-act="qdel" data-v="${i}" aria-label="Удалить">✕</button></span>`).join('')||'<span class="sec">Список пуст</span>'}</div>
+ <div class="fld"><label>Новый комментарий</label><input id="qn" placeholder="Например, без соли"></div><button class="btn" data-act="qadd">Добавить</button><button class="btn ghost" data-act="${back||'closeSheet'}">Готово</button>`)}
+function itemSheet(id,catId){
+ const f=id?findItem(id):null;const it=f?f.it:{name:'',price:'',desc:''};const cid=f?f.c.id:catId;
+ openSheet(`<b style="font-size:22px;letter-spacing:-.02em">${id?'Позиция':'Новая позиция'}</b>
+ <div class="fld"><label>Название</label><input id="in" value="${esc(it.name)}"></div>
+ <div class="fld"><label>Цена, сом</label><input id="ip" type="number" inputmode="numeric" value="${it.price}"></div>
+ <div class="fld"><label>Описание</label><textarea id="id" rows="3" placeholder="Состав, вес, пояснение">${esc(it.desc||'')}</textarea></div>
+ <div class="fld"><label>Раздел</label><select id="ic">${S.menu.cats.map(c=>`<option value="${c.id}" ${c.id===cid?'selected':''}>${c.bar?'Бар':'Кухня'} · ${esc(c.name)}</option>`).join('')}</select></div>
+ <button class="btn" data-act="saveItem" data-v="${id||''}">Сохранить</button>${id?'<button class="act red" data-act="delItem" data-v="'+id+'" style="height:48px;justify-content:center"><b>Удалить позицию</b></button>':''}`)}
+function catSheet(id){
+ const c=id?S.menu.cats.find(c=>c.id===id):null;
+ openSheet(`<b style="font-size:22px;letter-spacing:-.02em">${c?'Раздел':'Новый раздел'}</b><div class="fld"><label>Название</label><input id="cn" value="${c?esc(c.name):''}"></div>
+ <div class="fld"><label>Где показывать</label><select id="cs"><option value="kitchen" ${c&&!c.bar?'selected':!c&&ui.side==='kitchen'?'selected':''}>Кухня</option><option value="bar" ${c&&c.bar?'selected':!c&&ui.side==='bar'?'selected':''}>Бар</option></select></div>
+ <button class="btn" data-act="saveCat" data-v="${id||''}">Сохранить</button>${c?`<button class="act red" data-act="delCat" data-v="${id}" style="height:48px;justify-content:center"><b>Удалить раздел и позиции (${c.items.length})</b></button>`:''}`)}
+function zonesSheet(){
+ openSheet(`<b style="font-size:22px;letter-spacing:-.02em">Столы и зоны</b>${S.zones.map(z=>`<div style="display:flex;flex-direction:column;gap:8px"><span class="small sec" style="font-weight:600">${esc(z.name)}</span><div class="wrap">${z.tables.map((t,i)=>`<span class="cm">${esc(t)}<button class="x" data-act="tdel" data-z="${z.id}" data-v="${i}">✕</button></span>`).join('')}</div><div class="editrow"><input class="zin" data-z="${z.id}" placeholder="Номер стола" style="flex:1;border:0;border-radius:14px;background:var(--seg);padding:0 14px;height:44px;font-size:16px;outline:0"><button class="btn ghost" style="width:auto;padding:0 18px;height:44px" data-act="tadd" data-v="${z.id}">+</button></div></div>`).join('')}
+ <div class="fld"><label>Новая зона</label><input id="zn" placeholder="Название"></div><button class="btn ghost" data-act="zadd">Добавить зону</button><button class="btn" data-act="settings">Назад</button>`)}
+function settingsSheet(){
+ openSheet(`<b style="font-size:22px;letter-spacing:-.02em">Настройки</b>
+ <button class="act" data-act="editQuick2"><div><b>Быстрые комментарии</b><span>${S.quick.length} шт. · добавить, удалить</span></div></button>
+ <button class="act" data-act="zones"><div><b>Столы и зоны</b><span>Добавить или убрать стол</span></div></button>
+ <button class="act" data-act="backup"><div><b>Резервная копия</b><span>Сохранить или восстановить все данные</span></div></button>
+ <div class="card" style="background:var(--seg);box-shadow:none;padding:14px 16px;gap:6px"><div class="row"><span class="k">Заведению</span><b>${S.set.venue}%</b></div><div class="row"><span class="k">Тебе с остатка</span><b>${S.set.mine}%</b></div></div>
+ <button class="btn ghost" data-act="closeSheet">Закрыть</button>`)}
+function backupSheet(){
+ openSheet(`<b style="font-size:22px;letter-spacing:-.02em">Резервная копия</b><span class="sec small" style="line-height:1.4">Скопируй текст ниже и сохрани в заметках. Чтобы восстановить, вставь его в поле и нажми «Восстановить».</span>
+ <div class="fld"><textarea id="bk" rows="6">${esc(JSON.stringify(S))}</textarea></div><button class="btn" data-act="bkcopy">Скопировать</button><button class="btn ghost" data-act="bkrestore">Восстановить из текста</button><button class="link" data-act="settings">Назад</button>`)}
+function arcSheet(id){
+ const o=S.archive.find(x=>x.id===id);if(!o)return;
+ openSheet(`<div class="sub"><b style="font-size:22px;letter-spacing:-.02em">Стол ${esc(o.table)}</b><span class="sec small">${dd(o.closedAt,{day:'numeric',month:'long'}).toLowerCase()}, ${tm(o.closedAt)}</span></div>
+ <div class="panel" style="box-shadow:none;background:var(--seg)">${o.lines.map(l=>`<div class="row" style="padding:8px 0"><span>${esc(l.name)}${l.qty>1?' ×'+l.qty:''}${l.comment?`<br><span class="sec small">«${esc(l.comment)}»</span>`:''}</span><span>${fmt(l.price*l.qty)}</span></div>`).join('')}</div>
+ ${o.chef?`<div class="banner pu">Гости шефа · в кассу не пошло</div>`:o.discount>0?`<div class="row"><span class="k">Скидка${o.discPct?' '+o.discPct+'%':''}</span><span style="color:var(--grn)">−${fmt(o.discount)}</span></div>`:''}
+ <div class="row sepl"><b>${o.chef?'Сумма':'Оплачено'}</b><b style="font-size:20px">${fmt(o.chef?o.total:o.paid)} сом</b></div><button class="btn ghost" data-act="closeSheet">Закрыть</button>`)}
+
+/* ---------- actions ---------- */
+function addLine(itemId){
+ const f=findItem(itemId);if(!f)return;const{it}=f;
+ if(it.stop){toast('«'+it.name+'» в стопе');return}
+ let o=S.orders[ui.table];if(!o)o=S.orders[ui.table]={id:uid(),table:ui.table,openedAt:Date.now(),lines:[]};
+ let l=o.lines.find(x=>x.itemId===itemId&&!x.comment&&!x.served);
+ if(l)l.qty++;else{l={id:uid(),itemId,name:it.name,price:it.price,qty:1,comment:'',served:false};o.lines.push(l)}
+ ui.last={line:l.id};save();toast('Добавлено: '+it.name,true);refreshOrder()}
+function act(a,el){
+ const v=el.dataset.v;
+ switch(a){
+ case 'numkb':{ui.num=!ui.num;document.querySelectorAll('.search input').forEach(i=>i.setAttribute('inputmode',ui.num?'numeric':'text'));document.querySelectorAll('.kb').forEach(b=>{b.classList.toggle('on',ui.num);b.textContent=ui.num?'abc':'123'});const i=$('#q')||$('#mq');if(i){i.blur();setTimeout(()=>i.focus(),30)}break}
+ case 'theme':S.theme=S.theme==='dark'?'light':'dark';save();render();break;
+ case 'tab':ui.tab=v;render();break;
+ case 'zone':ui.zone=v;render();break;
+ case 'openShift':S.shift={start:Date.now()};save();render();break;
+ case 'endShift':ui.screen='endshift';render();break;
+ case 'backMain':ui.screen='main';render();break;
+ case 'closeShift':S.shifts.push({start:S.shift.start,end:Date.now()});S.shift=null;save();ui.screen='main';ui.tab='tables';render();break;
+ case 'openTable':ui.table=v;ui.q='';ui.ocat=null;ui.screen='order';render();break;
+ case 'back':{const o=S.orders[ui.table];if(o&&!o.lines.length){delete S.orders[ui.table];save()}ui.screen='main';ui.q='';ui.ocat=null;render();break}
+ case 'clearq':ui.q='';{const i=$('#q');if(i)i.value=''}refreshOrder();break;
+ case 'ocat':ui.ocat=ui.ocat===v?null:v;refreshOrder();break;
+ case 'add':addLine(v);break;
+ case 'undo':{const o=S.orders[ui.table];if(o&&ui.last){const i=o.lines.findIndex(l=>l.id===ui.last.line);if(i>=0){if(o.lines[i].qty>1)o.lines[i].qty--;else o.lines.splice(i,1);if(!o.lines.length)delete S.orders[ui.table];save()}}$('#toast').classList.remove('on');if(ui.screen==='order')refreshOrder();break}
+ case 'serve':{const l=S.orders[ui.table].lines.find(x=>x.id===v);l.served=!l.served;save();refreshOrder();break}
+ case 'serveAll':S.orders[ui.table].lines.forEach(l=>l.served=true);save();refreshOrder();break;
+ case 'editLine':lineSheet(v);break;
+ case 'qty':{const o=S.orders[ui.table],l=o.lines.find(x=>x.id===sheetLine);const n=l.qty+parseInt(v);if(n>=1){l.qty=n;save();$('#qv').textContent=n;refreshOrder()}break}
+ case 'qc':{const l=S.orders[ui.table].lines.find(x=>x.id===sheetLine);const c=S.quick[+v];const i=$('#lc');const cur=i.value.trim();if(!cur.split(/,\s*/).includes(c)){i.value=cur?cur+', '+c:c}l.comment=i.value.trim();save();refreshOrder();break}
+ case 'noStock':{const o=S.orders[ui.table],i=o.lines.findIndex(x=>x.id===sheetLine);const l=o.lines[i];const f=findItem(l.itemId);if(f)f.it.stop=true;o.lines.splice(i,1);if(!o.lines.length)delete S.orders[ui.table];save();closeSheet();toast('«'+l.name+'» убрано и добавлено в стоп-лист');refreshOrder();break}
+ case 'delLine':{const o=S.orders[ui.table],i=o.lines.findIndex(x=>x.id===sheetLine);o.lines.splice(i,1);if(!o.lines.length)delete S.orders[ui.table];save();closeSheet();refreshOrder();break}
+ case 'editQuick':quickSheet('backLine');break;
+ case 'backLine':lineSheet(sheetLine);break;
+ case 'editQuick2':quickSheet('settings');break;
+ case 'qdel':S.quick.splice(+v,1);save();quickSheet(el.closest('.box').querySelector('.btn.ghost').dataset.act);break;
+ case 'qadd':{const i=$('#qn');const t=i.value.trim();const back=el.parentElement.querySelector('.btn.ghost').dataset.act;if(t){S.quick.push(t);save()}quickSheet(back);break}
+ case 'checkout':ui.disc={pct:0,custom:null};ui.chef=false;ui.customOn=false;ui.screen='checkout';render();break;
+ case 'backOrder':ui.screen='order';render();break;
+ case 'disc':ui.disc={pct:+v,custom:null};ui.customOn=false;render();break;
+ case 'customDisc':ui.customOn=true;ui.disc={pct:0,custom:ui.disc.custom!=null?ui.disc.custom:0};render();{const i=$('#cdisc');if(i)i.focus()}break;
+ case 'chef':ui.chef=!ui.chef;render();break;
+ case 'pay':{const o=S.orders[ui.table];const total=orderSum(o);const ds=discSum(total);const pay=ui.chef?0:total-ds;
+  S.archive.push({id:uid(),table:ui.table,lines:o.lines,total,discount:ui.chef?0:ds,discPct:ui.chef||ui.disc.custom!=null?0:ui.disc.pct,paid:pay,chef:ui.chef,closedAt:Date.now(),shiftStart:S.shift?S.shift.start:0,openedAt:o.openedAt});
+  delete S.orders[ui.table];save();ui.screen='main';ui.tab='tables';render();toast(ui.chef?'Стол закрыт · гости шефа':'Стол закрыт · '+fmt(pay)+' сом');break}
+ case 'side':ui.side=v;ui.cat=null;render();break;
+ case 'mcat':ui.cat=v;render();break;
+ case 'stop':{const f=findItem(v);f.it.stop=!f.it.stop;save();render();break}
+ case 'menuEdit':ui.menuEdit=!ui.menuEdit;render();break;
+ case 'addItem':itemSheet(null,ui.cat);break;
+ case 'editItem':itemSheet(v);break;
+ case 'addCat':catSheet(null);break;
+ case 'editCat':catSheet(v);break;
+ case 'saveItem':{const n=$('#in').value.trim(),p=parseInt($('#ip').value),d=$('#id').value.trim(),cid=$('#ic').value;if(!n||isNaN(p)||p<0){toast('Введи название и цену');break}
+  if(v){const f=findItem(v);f.it.name=n;f.it.price=p;f.it.desc=d;if(f.c.id!==cid){f.c.items.splice(f.c.items.indexOf(f.it),1);S.menu.cats.find(c=>c.id===cid).items.push(f.it)}}
+  else S.menu.cats.find(c=>c.id===cid).items.push({id:'m'+uid(),name:n,price:p,desc:d,stop:false});
+  const tc=S.menu.cats.find(c=>c.id===cid);ui.side=tc.bar?'bar':'kitchen';ui.cat=cid;save();closeSheet();render();break}
+ case 'delItem':armed(el,()=>{const f=findItem(v);f.c.items.splice(f.c.items.indexOf(f.it),1);save();closeSheet();render()});break;
+ case 'saveCat':{const n=$('#cn').value.trim();if(!n){toast('Введи название');break}const bar=$('#cs').value==='bar';
+  if(v){const c=S.menu.cats.find(c=>c.id===v);c.name=n;c.bar=bar}else{const c={id:'c'+uid(),name:n,bar,items:[]};S.menu.cats.push(c);ui.cat=c.id}ui.side=bar?'bar':'kitchen';save();closeSheet();render();break}
+ case 'delCat':armed(el,()=>{S.menu.cats=S.menu.cats.filter(c=>c.id!==v);ui.cat=null;save();closeSheet();render()});break;
+ case 'cview':ui.cashView=v;render();break;
+ case 'period':ui.period=v;render();break;
+ case 'arcOrder':arcSheet(v);break;
+ case 'settings':settingsSheet();break;
+ case 'zones':zonesSheet();break;
+ case 'tadd':{const i=document.querySelector('.zin[data-z="'+v+'"]');const t=i.value.trim();const z=S.zones.find(z=>z.id===v);if(t&&!S.zones.some(z=>z.tables.includes(t))){z.tables.push(t);save();zonesSheet()}else if(t)toast('Такой стол уже есть');break}
+ case 'tdel':{const z=S.zones.find(z=>z.id===el.dataset.z);const t=z.tables[+v];if(S.orders[t]&&S.orders[t].lines.length){toast('На столе есть открытый заказ');break}z.tables.splice(+v,1);save();zonesSheet();break}
+ case 'zadd':{const t=$('#zn').value.trim();if(t){S.zones.push({id:'z'+uid(),name:t,tables:[]});save();zonesSheet()}break}
+ case 'backup':backupSheet();break;
+ case 'bkcopy':{const t=$('#bk');t.select();try{navigator.clipboard.writeText(t.value).then(()=>toast('Скопировано'),()=>{document.execCommand('copy');toast('Скопировано')})}catch(e){document.execCommand('copy');toast('Скопировано')}break}
+ case 'bkrestore':{try{const c=JSON.parse($('#bk').value);if(!c.menu||!c.zones)throw 0;S=Object.assign(defState(),c);save();closeSheet();render();toast('Данные восстановлены')}catch(e){toast('Не удалось прочитать копию')}break}
+ case 'closeSheet':closeSheet();break;
+ }
+}
+document.addEventListener('pointerdown',e=>{if(e.target.closest('[data-keep]'))e.preventDefault()});
+document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(el)act(el.dataset.act,el)});
+document.addEventListener('input',e=>{const t=e.target;
+ if(t.id==='q'){ui.q=t.value;refreshOrder()}
+ else if(t.id==='mq'){ui.menuQ=t.value;refreshMenu()}
+ else if(t.id==='lc'){const l=S.orders[ui.table].lines.find(x=>x.id===sheetLine);l.comment=t.value.trim();save();refreshOrder()}
+ else if(t.id==='cdisc'){const n=parseInt(t.value);ui.disc={pct:0,custom:isNaN(n)?0:Math.max(0,n)};const o=S.orders[ui.table];const total=orderSum(o);const pay=total-discSum(total);const b=document.querySelector('.btn[data-act="pay"]');if(b)b.textContent='Закрыть стол · '+fmt(pay)+' сом';const k=document.querySelectorAll('.card')[0];if(k){render();const i=$('#cdisc');i.focus();i.setSelectionRange(i.value.length,i.value.length)}}
+});
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset&&t.dataset.in){ui[t.dataset.in]=t.value;render()}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){const t=e.target;if(t.id==='qn')act('qadd',document.querySelector('[data-act=qadd]'));else if(t.classList.contains('zin'))act('tadd',{dataset:{v:t.dataset.z}});else if(t.id==='zn')act('zadd',{dataset:{}});else t.blur()}});
+setInterval(()=>{if(S.shift&&(ui.screen==='endshift'||(ui.screen==='main'&&ui.tab==='tables'))&&!$('#sheet').classList.contains('open')&&!(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName)))render()},60000);
+document.documentElement.dataset.theme=S.theme;
+render();cloudLoad();
+</script>
+</body>
+</html>
